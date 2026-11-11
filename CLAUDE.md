@@ -3,20 +3,20 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## State of this repo
-This is a **repo template / kit** for portfolio-grade .NET + Angular/React apps, not yet a product. There is no `src/`, `tests/`, `docs/spec.md` or `docs/architecture.md`, and `CLAUDE.md`, `README.md` and `ci.yml` still contain `<Product>`, `<owner>/<repo>` and `<product>` placeholders. When instantiating a product, replace every placeholder (including `WEB_DIR` in `.github/workflows/ci.yml`; delete the frontend CI steps if there is no frontend) and create the spec and architecture docs that the `@docs/...` imports below point to. The directory is not a git repository yet. `reference/` holds unrelated WhatsApp screenshots; ignore it.
+This repo started as a template/kit and is now being instantiated as **AiSdlc**. The product is built in vertical slices (see `docs/spec.md`); `src/` and `tests/` appear as slices land, so some commands below only work once their slice is merged. `reference/` (git-ignored, local only) holds screenshots of the original app and the use-case brief: use it for look and feel and requirements. The `Ai-Sdlc/` folder is a stray empty clone; ignore it.
 
-<Product>: <one-line purpose>. Portfolio project; synthetic data only.
+AiSdlc: AI drafts requirements analysis, architecture, development tasks and QA test cases; named reviewers approve each of four gates. Portfolio project; synthetic data only.
 
 ## Stack
-.NET 10 · <frontend> · <auth> · Aspire · see @docs/architecture.md for services and data stores.
+.NET 10 · Angular · ASP.NET Core Identity + JWT · SQLite · Aspire · see @docs/architecture.md for services and data stores.
 
 ## Commands
-- Run everything locally: `aspire run` (AppHost: `src/<Product>.AppHost`; needs Docker running)
+- Run everything locally: `dotnet run --project src/AiSdlc.AppHost` or `aspire run` if the Aspire CLI is installed (no Docker needed: SQLite and local file storage)
 - Backend tests: `dotnet test` · single test: `dotnet test --filter "FullyQualifiedName~CreateTransferHandlerTests.Handle_InsufficientFunds_ReturnsFailure"`
-- Frontend tests: `npm run test:ci --prefix src/web/<product>-web` (CI and README use `test:ci`)
-- Format: `dotnet format` · lint: `npm run lint --prefix src/web/<product>-web`
+- Frontend tests: `npm run test:ci --prefix src/web/aisdlc-web` (CI and README use `test:ci`)
+- Format: `dotnet format` · lint: `npm run lint --prefix src/web/aisdlc-web`
 - Render diagrams: `pwsh -File scripts/render-diagrams.ps1` (needs Node for `npx` Mermaid CLI, plus Python `diagrams` and Graphviz for `deployment-*.py`)
-- Secrets: `dotnet user-secrets --project src/<Product>.AppHost set "Parameters:<name>" "<value>"`
+- Secrets: `dotnet user-secrets --project src/AiSdlc.AppHost set "Parameters:<name>" "<value>"`
 
 CI (`.github/workflows/ci.yml`) runs restore, Release build, `dotnet format --verify-no-changes --severity error`, tests with coverage, then frontend `npm ci`, lint, `test:ci`, build. It also runs a diagrams job and a gitleaks scan on PRs.
 

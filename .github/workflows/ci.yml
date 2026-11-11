@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 env:
-  WEB_DIR: src/web/<product>-web   # replace <product>; delete the frontend steps if the repo has no frontend
+  WEB_DIR: src/web/aisdlc-web
 
 jobs:
   build-and-test:
@@ -33,7 +33,7 @@ jobs:
       - name: Check formatting (whitespace and error-level rules only, so warnings don't fail CI)
         run: dotnet format --verify-no-changes --no-restore --severity error
 
-      - name: Backend tests (Testcontainers uses the runner's Docker)
+      - name: Backend tests
         run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
 
       - uses: actions/setup-node@v4

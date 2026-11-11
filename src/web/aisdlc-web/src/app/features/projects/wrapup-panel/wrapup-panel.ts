@@ -13,6 +13,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { problemMessage } from '../../../core/api/problem';
 import { WrapupApi } from '../../../core/api/wrapup-api';
 import type { AuditEntry, Traceability } from '../../../core/api/wrapup-types';
+import { AuthService } from '../../../core/auth/auth.service';
+import { AppRole } from '../../../core/auth/roles';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { Icon } from '../../../shared/ui/icon/icon';
 
@@ -29,6 +31,7 @@ const AUDIT_PAGE_SIZE = 25;
 export class WrapupPanel implements OnInit {
   private readonly api = inject(WrapupApi);
   private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthService);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -40,6 +43,11 @@ export class WrapupPanel implements OnInit {
   protected readonly loadingAudit = signal(false);
   protected readonly downloading = signal(false);
   private page = 0;
+
+  /** The audit trail names people and files, so only the roles that review the work can read it. */
+  protected readonly canSeeAudit = computed(() =>
+    this.auth.hasAnyRole([AppRole.ProjectManager, AppRole.Architect, AppRole.QA]),
+  );
 
   protected readonly hasMoreAudit = computed(() => this.audit().length < this.auditTotal());
   protected readonly gapCount = computed(
@@ -57,7 +65,9 @@ export class WrapupPanel implements OnInit {
         next: (trace) => this.trace.set(trace),
         error: (error: unknown) => this.toast.error(problemMessage(error)),
       });
-    this.loadMoreAudit();
+    if (this.canSeeAudit()) {
+      this.loadMoreAudit();
+    }
   }
 
   protected loadMoreAudit(): void {
@@ -100,9 +110,11 @@ export class WrapupPanel implements OnInit {
 
   /** The download is itself audited, so show it. */
   private reloadAudit(): void {
-    this.page = 0;
-    this.audit.set([]);
-    this.loadMoreAudit();
+    if (this.canSeeAudit()) {
+      this.page = 0;
+      this.audit.set([]);
+      this.loadMoreAudit();
+    }
   }
 
   private saveToDisk(blob: Blob, fileName: string): void {

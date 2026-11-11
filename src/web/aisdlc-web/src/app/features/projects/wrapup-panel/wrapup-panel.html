@@ -71,55 +71,62 @@
   }
 </section>
 
-<section class="block" aria-labelledby="audit-title">
-  <h3 id="audit-title">Audit trail ({{ auditTotal() }})</h3>
-  @if (audit().length === 0 && !loadingAudit()) {
-    <p class="note">Nothing has been recorded yet.</p>
-  } @else {
-    <div class="scroll">
-      <table>
-        <caption class="sr-only">
-          Everything recorded for this project, newest first
-        </caption>
-        <thead>
-          <tr>
-            <th scope="col">When</th>
-            <th scope="col">Who</th>
-            <th scope="col">What</th>
-            <th scope="col">Result</th>
-            <th scope="col">Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (entry of audit(); track $index) {
+@if (canSeeAudit()) {
+  <section class="block" aria-labelledby="audit-title">
+    <h3 id="audit-title">Audit trail ({{ auditTotal() }})</h3>
+    @if (audit().length === 0 && !loadingAudit()) {
+      <p class="note">Nothing has been recorded yet.</p>
+    } @else {
+      <div class="scroll">
+        <table>
+          <caption class="sr-only">
+            Everything recorded for this project, newest first
+          </caption>
+          <thead>
             <tr>
-              <td>{{ entry.occurredAtUtc | date: 'medium' }}</td>
-              <td>{{ entry.actorEmail ?? 'system' }}</td>
-              <td>{{ entry.action }}</td>
-              <td>
-                <span
-                  class="pill"
-                  [class.pill-success]="entry.outcome === 'Success'"
-                  [class.pill-danger]="entry.outcome === 'Failure'"
-                >
-                  {{ entry.outcome }}
-                </span>
-              </td>
-              <td class="details">{{ entry.details }}</td>
+              <th scope="col">When</th>
+              <th scope="col">Who</th>
+              <th scope="col">What</th>
+              <th scope="col">Result</th>
+              <th scope="col">Details</th>
             </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    @if (hasMoreAudit()) {
-      <button
-        type="button"
-        class="btn btn-sm"
-        [disabled]="loadingAudit()"
-        (click)="loadMoreAudit()"
-      >
-        {{ loadingAudit() ? 'Loading…' : 'Show older entries' }}
-      </button>
+          </thead>
+          <tbody>
+            @for (entry of audit(); track $index) {
+              <tr>
+                <td>{{ entry.occurredAtUtc | date: 'medium' }}</td>
+                <td>{{ entry.actorEmail ?? 'system' }}</td>
+                <td>{{ entry.action }}</td>
+                <td>
+                  <span
+                    class="pill"
+                    [class.pill-success]="entry.outcome === 'Success'"
+                    [class.pill-danger]="entry.outcome === 'Failure'"
+                  >
+                    {{ entry.outcome }}
+                  </span>
+                </td>
+                <td class="details">{{ entry.details }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      @if (hasMoreAudit()) {
+        <button
+          type="button"
+          class="btn btn-sm"
+          [disabled]="loadingAudit()"
+          (click)="loadMoreAudit()"
+        >
+          {{ loadingAudit() ? 'Loading…' : 'Show older entries' }}
+        </button>
+      }
     }
-  }
-</section>
+  </section>
+} @else {
+  <section class="block">
+    <h3>Audit trail</h3>
+    <p class="note">The audit trail is for the Project Manager, Architect and QA.</p>
+  </section>
+}

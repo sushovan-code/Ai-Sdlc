@@ -21,6 +21,12 @@ public sealed class GetAuditHandler(ICurrentUser currentUser, IProjectRepository
             return Result<PagedResult<AuditEntryDto>>.Failure(opened.Error);
         }
 
+        // The trail names people and uploaded file names, so it is for the roles that review the work, not every member.
+        if (!GetAudit.ReaderRoles.Contains(currentUser.Role))
+        {
+            return Result<PagedResult<AuditEntryDto>>.Failure(ProjectErrors.AuditRestricted);
+        }
+
         var page = await audit.ListForProjectAsync(query.ProjectId, query.Page, query.PageSize, cancellationToken);
         return Result<PagedResult<AuditEntryDto>>.Success(page);
     }

@@ -1,5 +1,6 @@
 using System.Text;
 using AiSdlc.Api.Http;
+using AiSdlc.Api.Security;
 using AiSdlc.Application.Common;
 using AiSdlc.Application.Wrapup;
 using AiSdlc.Application.Wrapup.GetAudit;
@@ -31,6 +32,7 @@ public static class WrapupEndpoints
 
         group.MapGet("/report", ReportAsync)
             .RequireAuthorization()
+            .RequireRateLimiting(RateLimitPolicies.Writes)
             .Produces(StatusCodes.Status200OK, contentType: MarkdownContentType)
             .ProducesProblem(StatusCodes.Status404NotFound);
 

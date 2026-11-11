@@ -76,6 +76,17 @@ describe('ProjectWorkspacePage step navigation', () => {
     expect(stepButton('Analysis').disabled).toBe(true);
   });
 
+  it('places Previous and Next after the stage content, at the bottom of the page', async () => {
+    await render(filesUploaded());
+
+    const content = host(fixture).querySelector('aisdlc-project-files') as HTMLElement;
+    const pager = host(fixture).querySelector('nav.pager') as HTMLElement;
+    const position = content.compareDocumentPosition(pager);
+
+    expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(host(fixture).querySelector('aisdlc-stepper nav.pager')).toBeNull();
+  });
+
   it('opens a project on its first stage, with the files in view', async () => {
     await render(filesUploaded());
 

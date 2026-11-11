@@ -50,19 +50,17 @@
 }
 
 .stepper {
-  display: grid;
-  gap: 16px;
   padding: 20px 12px 16px;
 }
 
+/* Previous and Next sit at the bottom of the page, after the content they move between. */
 .pager {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 8px 0;
-  border-top: 1px solid var(--border);
+  padding: 12px 16px;
 }
 
 .hint {

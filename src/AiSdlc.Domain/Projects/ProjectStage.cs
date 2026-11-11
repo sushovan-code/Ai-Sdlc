@@ -8,4 +8,7 @@ public enum ProjectStage
 
     /// <summary>Requirements and the team sheet are both present.</summary>
     FilesUploaded,
+
+    /// <summary>Gate 1 is passed: the requirements analysis was approved, so architecture can begin.</summary>
+    AnalysisApproved,
 }

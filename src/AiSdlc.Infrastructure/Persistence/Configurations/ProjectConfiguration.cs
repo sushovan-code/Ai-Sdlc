@@ -25,6 +25,10 @@ internal sealed class ProjectConfiguration : IEntityTypeConfiguration<Project>
         builder.HasMany(x => x.Members).WithOne().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(x => x.Files).WithOne().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(x => x.Team).WithOne().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasMany(x => x.Artifacts).WithOne().HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
+        builder.Navigation(x => x.Artifacts).UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Ignore(x => x.RequirementsLocked);
+        builder.Ignore(x => x.CanDraftAnalysis);
         builder.Navigation(x => x.Members).UsePropertyAccessMode(PropertyAccessMode.Field);
         builder.Navigation(x => x.Team).UsePropertyAccessMode(PropertyAccessMode.Field);
 

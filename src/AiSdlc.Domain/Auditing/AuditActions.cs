@@ -18,6 +18,10 @@ public static class AuditActions
     public const string FileRejected = "file.rejected";
     public const string FileDownloaded = "file.downloaded";
     public const string FileDeleted = "file.deleted";
+    public const string AiCall = "ai.call";
+    public const string AnalysisGenerated = "analysis.generated";
+    public const string AnalysisApproved = "analysis.approved";
+    public const string AnalysisRejected = "analysis.rejected";
     public const string TeamImported = "team.imported";
     public const string SprintCadenceChanged = "project.sprint-cadence-changed";
 }

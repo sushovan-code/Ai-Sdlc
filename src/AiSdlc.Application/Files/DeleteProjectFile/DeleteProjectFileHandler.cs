@@ -1,7 +1,9 @@
 using AiSdlc.Application.Abstractions;
+using AiSdlc.Application.Analysis;
 using AiSdlc.Application.Common;
 using AiSdlc.Application.Projects;
 using AiSdlc.Domain.Auditing;
+using AiSdlc.Domain.Projects;
 
 namespace AiSdlc.Application.Files.DeleteProjectFile;
 
@@ -24,6 +26,12 @@ public sealed class DeleteProjectFileHandler(
         if (opened.IsFailure)
         {
             return Result.Failure(opened.Error);
+        }
+
+        var target = opened.Value.Files.FirstOrDefault(f => f.Id == command.FileId && !f.IsDeleted);
+        if (target is { Kind: FileKind.Requirements } && opened.Value.RequirementsLocked)
+        {
+            return Result.Failure(AnalysisErrors.InputsLocked);
         }
 
         var file = opened.Value.DeleteFile(command.FileId, userId, time.GetUtcNow());

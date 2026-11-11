@@ -14,11 +14,11 @@ Follows `docs/standards/architecture.md`. Single module, so projects are `AiSdlc
 | Orchestration | Aspire AppHost | Starts API and web; no Docker needed |
 
 ## Layers
-Domain (project, gate, artifact version, team member, sprint, scheduler) <- Application (use cases by feature, ports) <- Infrastructure (EF Core, Identity, storage, docx/xlsx parsing, OpenAI adapter, agents) <- Api (endpoints, policies, composition root).
+Domain (project, gate, artifact version, team member, sprint, scheduler) <- Application (use cases by feature, ports, AI agents) <- Infrastructure (EF Core, Identity, storage, docx/xlsx parsing, Fake and OpenAI chat clients) <- Api (endpoints, policies, composition root).
 
 ## Main flows
 1. Upload: validate type, size and signature, hash, store a new file version, audit.
-2. Generate: orchestrator checks the gate state and the caller's role, retrieval agent gathers evidence, specialist agent drafts, critic and governance agents annotate, the result is stored as a new artifact version in `PendingReview`.
+2. Generate (built for gate 1, the analysis): the handler checks the stage and that the caller is a Project Manager, reads the latest requirements, and the governance guard masks personal data and secrets. The specialist agent drafts, the retrieval agent attaches evidence quotes, the critic and governance agents annotate, and the result is stored as a new artifact version in `PendingReview`. Every model call is audited. See ADR 0003.
 3. Review: an authorised approver approves, rejects, edits or regenerates with feedback. Approval moves the gate and unlocks the next stage.
 4. Plan sprints: after gate 2 the tasks agent proposes tasks; the scheduler assigns them across sprints using member capacity.
 

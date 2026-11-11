@@ -1069,7 +1069,7 @@ export interface components {
          * @description Where a project is in the lifecycle. Later slices add the review stages after ProjectStage.FilesUploaded.
          * @enum {unknown}
          */
-        ProjectStage: "Draft" | "FilesUploaded";
+        ProjectStage: "Draft" | "FilesUploaded" | "AnalysisApproved";
         ProjectSummaryDto: {
             /** Format: uuid */
             id: string;

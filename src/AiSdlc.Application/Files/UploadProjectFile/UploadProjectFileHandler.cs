@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using AiSdlc.Application.Abstractions;
+using AiSdlc.Application.Analysis;
 using AiSdlc.Application.Common;
 using AiSdlc.Application.Projects;
 using AiSdlc.Application.Team.Import;
@@ -35,6 +36,11 @@ public sealed class UploadProjectFileHandler(
         }
 
         var project = opened.Value;
+        if (command.Kind == FileKind.Requirements && project.RequirementsLocked)
+        {
+            return Result<ProjectFileDto>.Failure(AnalysisErrors.InputsLocked);
+        }
+
         var fileName = FileNames.Sanitize(command.FileName);
         var extension = FileNames.ExtensionOf(fileName);
 

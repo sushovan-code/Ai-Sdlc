@@ -39,6 +39,17 @@ public static class RateLimitingExtensions
                             Window = TimeSpan.FromSeconds(settings.Value.WritesWindowSeconds),
                             QueueLimit = 0,
                         }));
+                limiter.AddPolicy(RateLimitPolicies.AiGeneration, httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        httpContext.User.FindFirst(JwtClaims.Subject)?.Value
+                            ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                            ?? UnknownClient,
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = settings.Value.AiPermitLimit,
+                            Window = TimeSpan.FromSeconds(settings.Value.AiWindowSeconds),
+                            QueueLimit = 0,
+                        }));
             });
 
         return services;

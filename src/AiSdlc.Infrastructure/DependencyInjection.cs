@@ -1,7 +1,9 @@
 using System.Security.Cryptography;
 using AiSdlc.Application.Abstractions;
 using AiSdlc.Application.Auth;
+using AiSdlc.Infrastructure.Ai;
 using AiSdlc.Infrastructure.Auditing;
+using AiSdlc.Infrastructure.Documents;
 using AiSdlc.Infrastructure.Identity;
 using AiSdlc.Infrastructure.Persistence;
 using AiSdlc.Infrastructure.Projects;
@@ -12,9 +14,11 @@ using AiSdlc.Infrastructure.Team;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace AiSdlc.Infrastructure;
 
@@ -38,6 +42,8 @@ public static class DependencyInjection
         services.AddScoped<IAuditLog, AuditLog>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddSingleton<ITeamSheetReader, ClosedXmlTeamSheetReader>();
+        services.AddSingleton<IRequirementsReader, OpenXmlRequirementsReader>();
+        AddAi(services, configuration);
 
         services.AddOptions<StorageOptions>()
             .Bind(configuration.GetSection(StorageOptions.SectionName))
@@ -49,6 +55,17 @@ public static class DependencyInjection
         services.AddHostedService<DatabaseInitializer>();
 
         return services;
+    }
+
+    private static void AddAi(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<AiOptions>()
+            .Bind(configuration.GetSection(AiOptions.SectionName))
+            .Validate(
+                o => o.IsValid(),
+                $"Ai settings are invalid: Provider must be '{AiOptions.FakeProvider}' or '{AiOptions.OpenAiProvider}', and OpenAI needs ApiKey (user secret Ai:ApiKey), Model and TimeoutSeconds.")
+            .ValidateOnStart();
+        services.AddSingleton(provider => ChatClientFactory.Create(provider.GetRequiredService<IOptions<AiOptions>>()));
     }
 
     private static void AddPersistence(IServiceCollection services, IConfiguration configuration)

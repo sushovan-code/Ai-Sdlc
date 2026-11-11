@@ -1,0 +1,268 @@
+@if (overview(); as data) {
+  <header class="head">
+    <div>
+      <h2>Requirements analysis</h2>
+      <p class="sub">
+        AI reads the requirements and drafts what the system must do. The Project Manager reviews it
+        at gate 1.
+      </p>
+    </div>
+    @if (latest(); as current) {
+      <span
+        class="pill"
+        [class.pill-success]="current.status === 'Approved'"
+        [class.pill-warning]="current.status === 'PendingReview'"
+        [class.pill-danger]="current.status === 'Rejected'"
+      >
+        Version {{ current.version }} ·
+        {{ statusLabel(current.status) }}
+      </span>
+    }
+  </header>
+
+  <p class="note" role="status" aria-live="polite">
+    {{ busy() === 'generate' ? 'The AI is drafting. This can take a minute.' : '' }}
+  </p>
+
+  @if (!latest()) {
+    <div class="empty">
+      @if (data.canGenerate && canManage()) {
+        <p>No analysis yet. Generate a first draft from the uploaded requirements.</p>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="busy() !== null"
+          (click)="generate()"
+        >
+          <aisdlc-icon name="copilot" [size]="16" />
+          {{ busy() === 'generate' ? 'Drafting…' : 'Generate with AI' }}
+        </button>
+      } @else if (!data.canGenerate) {
+        <p><aisdlc-icon name="lock" [size]="14" /> {{ data.blockedReason }}</p>
+      } @else {
+        <p>No analysis yet. The Project Manager can generate it.</p>
+      }
+    </div>
+  } @else {
+    @let current = latest()!;
+
+    @if (isApproved()) {
+      <p #approvedBanner class="banner ok" role="status" tabindex="-1">
+        <aisdlc-icon name="check-circle" [size]="18" />
+        Approved by the {{ roleLabel(approval()?.reviewerRole ?? '') }} on
+        {{ approval()?.decidedAtUtc | date: 'medium' }}. The requirements are now locked.
+      </p>
+    }
+
+    <section class="block">
+      <h3>Summary</h3>
+      <p>{{ current.content.summary }}</p>
+      @if (current.feedback) {
+        <p class="note">Written after this feedback: “{{ current.feedback }}”</p>
+      }
+    </section>
+
+    <section class="block">
+      <h3>Functional requirements ({{ current.content.functionalRequirements.length }})</h3>
+      <ul class="items">
+        @for (item of current.content.functionalRequirements; track item.id) {
+          <li>
+            <span class="id">{{ item.id }}</span>
+            <div class="body">
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.description }}</span>
+              <span class="refs">
+                @for (ref of item.sourceRefs; track ref) {
+                  <span class="ref">{{ ref }}</span>
+                }
+              </span>
+            </div>
+            <span class="level">{{ item.priority }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+
+    @if (current.content.nonFunctionalRequirements.length > 0) {
+      <section class="block">
+        <h3>
+          Non-functional requirements ({{ current.content.nonFunctionalRequirements.length }})
+        </h3>
+        <ul class="items">
+          @for (item of current.content.nonFunctionalRequirements; track item.id) {
+            <li>
+              <span class="id">{{ item.id }}</span>
+              <div class="body">
+                <strong>{{ item.title }}</strong>
+                <span>{{ item.description }}</span>
+                <span class="refs">
+                  @for (ref of item.sourceRefs; track ref) {
+                    <span class="ref">{{ ref }}</span>
+                  }
+                </span>
+              </div>
+              <span class="level">{{ item.priority }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (current.content.ambiguities.length > 0 || current.content.gaps.length > 0) {
+      <section class="block">
+        <h3>Questions to settle</h3>
+        <ul class="plain">
+          @for (item of current.content.ambiguities; track item.id) {
+            <li>
+              <span class="id">{{ item.id }}</span> {{ item.text }}
+            </li>
+          }
+          @for (item of current.content.gaps; track item.id) {
+            <li>
+              <span class="id">{{ item.id }}</span> {{ item.text }}
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (current.content.assumptions.length > 0) {
+      <section class="block">
+        <h3>Assumptions</h3>
+        <ul class="plain">
+          @for (text of current.content.assumptions; track $index) {
+            <li>{{ text }}</li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (current.content.risks.length > 0) {
+      <section class="block">
+        <h3>Risks</h3>
+        <ul class="plain">
+          @for (risk of current.content.risks; track risk.id) {
+            <li>
+              <span class="id">{{ risk.id }}</span> {{ risk.description }}
+              <span class="level">{{ risk.severity }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (current.notes.critic.length > 0 || current.notes.flags.length > 0) {
+      <section class="block review-notes">
+        <h3>Automatic review</h3>
+        <ul class="plain">
+          @for (flag of current.notes.flags; track flag.code + flag.message) {
+            <li><aisdlc-icon name="alert" [size]="14" /> {{ flag.message }}</li>
+          }
+          @for (note of current.notes.critic; track $index) {
+            <li>
+              <aisdlc-icon name="info" [size]="14" /> {{ note.note }}
+              <span class="level">{{ note.severity }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+
+    @if (current.content.evidence.length > 0) {
+      <details class="block">
+        <summary>Evidence from the document ({{ current.content.evidence.length }})</summary>
+        <ul class="plain">
+          @for (e of current.content.evidence; track e.ref) {
+            <li>
+              <span class="ref">{{ e.ref }}</span> “{{ e.quote }}”
+            </li>
+          }
+        </ul>
+      </details>
+    }
+
+    <p class="meta">
+      Drafted {{ current.createdAtUtc | date: 'medium' }} by {{ current.model }} ({{
+        current.promptVersion
+      }}). AI can be wrong: check it against the document.
+    </p>
+
+    @if (canManage()) {
+      @if (isPending() || canRegenerate()) {
+        <div class="review">
+          <label for="analysis-comment">
+            {{
+              isPending()
+                ? 'Comment (feedback for a new draft, or the reason for rejecting)'
+                : 'Feedback for the next draft (optional)'
+            }}
+          </label>
+          <textarea
+            id="analysis-comment"
+            class="input plain"
+            rows="3"
+            maxlength="2000"
+            [value]="comment()"
+            (input)="typeComment($event)"
+          ></textarea>
+          <div class="actions">
+            <button type="button" class="btn" [disabled]="busy() !== null" (click)="generate()">
+              <aisdlc-icon name="copilot" [size]="16" />
+              {{ busy() === 'generate' ? 'Drafting…' : 'Regenerate' }}
+            </button>
+            @if (isPending()) {
+              <button
+                type="button"
+                class="btn btn-danger"
+                [disabled]="busy() !== null || comment().trim().length === 0"
+                (click)="reject()"
+              >
+                <aisdlc-icon name="x" [size]="16" /> Reject
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                [disabled]="busy() !== null"
+                (click)="approve()"
+              >
+                <aisdlc-icon name="check" [size]="16" /> Approve
+              </button>
+            }
+          </div>
+        </div>
+      }
+    } @else if (!isApproved()) {
+      <p class="note">Only the Project Manager can generate and review the analysis.</p>
+    }
+
+    @if (olderVersions().length > 0) {
+      <details class="block">
+        <summary>Earlier versions ({{ olderVersions().length }})</summary>
+        <ul class="plain">
+          @for (old of olderVersions(); track old.version) {
+            <li>
+              Version {{ old.version }} · {{ statusLabel(old.status) }} ·
+              {{ old.createdAtUtc | date: 'medium' }}
+              @if (old.feedback) {
+                · feedback: “{{ old.feedback }}”
+              }
+              @for (decision of old.decisions; track decision.decidedAtUtc) {
+                · {{ statusLabel(decision.kind) }} by {{ roleLabel(decision.reviewerRole) }}
+                @if (decision.comment) {
+                  (“{{ decision.comment }}”)
+                }
+              }
+            </li>
+          }
+        </ul>
+      </details>
+    }
+  }
+} @else if (loadFailed()) {
+  <p class="alert alert-error" role="alert">
+    Could not load the analysis.
+    <button type="button" class="btn btn-sm" (click)="load()">Try again</button>
+  </p>
+} @else {
+  <p class="loading">Loading analysis…</p>
+}

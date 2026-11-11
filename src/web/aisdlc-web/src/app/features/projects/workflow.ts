@@ -58,7 +58,14 @@ export const WORKFLOW: readonly WorkflowStep[] = [
 
 /** The furthest stage a project can currently be opened at. Later review stages extend this. */
 export function furthestStep(stage: ProjectStage): number {
-  return stage === 'FilesUploaded' ? 1 : 0;
+  switch (stage) {
+    case 'AnalysisApproved':
+      return 2;
+    case 'FilesUploaded':
+      return 1;
+    default:
+      return 0;
+  }
 }
 
 /** Why the user cannot move forward from <paramref name="index"/>, or null when they can. */

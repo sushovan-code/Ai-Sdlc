@@ -105,4 +105,24 @@ public sealed class StageFlowTests(ApiFactory factory)
         using var anonymous = factory.CreateClient();
         (await anonymous.GetAsync(Url(project, "architecture"))).StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
+
+    [Fact]
+    public async Task EditingWithAnIncompleteBody_IsRefusedCleanly_NeverAServerError()
+    {
+        using var manager = await factory.SignedInAsClientAsync(TestUsers.ProjectManager);
+        var project = await manager.CreateReadyProjectAsync();
+        await manager.AddMemberAsync(project, (await manager.FindUserAsync(TestUsers.Architect)).Id);
+        await manager.GenerateAsync(project);
+        await manager.PostAsJsonAsync($"/api/v1/projects/{project}/analysis/versions/1/approve", new { });
+        using var architect = await factory.SignedInAsClientAsync(TestUsers.Architect);
+        await GenerateAsync(architect, project, "architecture");
+        using var outsider = await factory.SignedInAsClientAsync(TestUsers.QA);
+        const string incomplete = "{\"summary\":\"x\",\"sections\":null}";
+
+        using var asOutsider = new StringContent(incomplete, System.Text.Encoding.UTF8, "application/json");
+        using var asArchitect = new StringContent(incomplete, System.Text.Encoding.UTF8, "application/json");
+
+        (await outsider.PutAsync(Url(project, "architecture", "/edit"), asOutsider)).StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        (await architect.PutAsync(Url(project, "architecture", "/edit"), asArchitect)).StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+    }
 }

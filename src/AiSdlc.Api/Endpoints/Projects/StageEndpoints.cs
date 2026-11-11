@@ -7,6 +7,7 @@ using AiSdlc.Application.Stages.EditStage;
 using AiSdlc.Application.Stages.GenerateStage;
 using AiSdlc.Application.Stages.GetStage;
 using AiSdlc.Domain.Artifacts;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AiSdlc.Api.Endpoints.Projects;
 
@@ -16,6 +17,8 @@ namespace AiSdlc.Api.Endpoints.Projects;
 /// </summary>
 public static class StageEndpoints
 {
+    private const long MaxEditBodyBytes = 512 * 1024;
+
     private static readonly Dictionary<string, ArtifactStage> Slugs = new(StringComparer.OrdinalIgnoreCase)
     {
         ["architecture"] = ArtifactStage.Architecture,
@@ -57,6 +60,7 @@ public static class StageEndpoints
 
         group.MapPut("/edit", EditAsync)
             .RequireAuthorization()
+            .WithMetadata(new RequestSizeLimitAttribute(MaxEditBodyBytes))
             .RequireRateLimiting(RateLimitPolicies.Writes)
             .Produces<StageVersionDto>()
             .ProducesProblem(StatusCodes.Status400BadRequest)

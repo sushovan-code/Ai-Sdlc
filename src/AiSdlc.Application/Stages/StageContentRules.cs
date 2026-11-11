@@ -13,6 +13,19 @@ public static class StageContentRules
     public const int MaxTags = 10;
     public const int MaxTagLength = 80;
     public const int MaxRefs = 30;
+    public const int MaxIdLength = 40;
+    public const int MaxRefLength = 40;
+
+    /// <summary>
+    /// True when anything the content must hold is missing. JSON can bind nulls into these records, so this runs
+    /// before the content is touched.
+    /// </summary>
+    public static bool HasMissingParts(StageContent? content) =>
+        content?.Summary is null
+        || content.Sections is null
+        || content.Sections.Any(s => s?.Title is null || s.Items is null
+            || s.Items.Any(i => i is null || i.Id is null || i.Title is null || i.Text is null
+                || i.Tags is null || i.Refs is null || i.Tags.Any(t => t is null) || i.Refs.Any(r => r is null)));
 
     /// <summary>Trims text and drops blank tags and refs.</summary>
     public static StageContent Normalize(StageContent content) => new(
@@ -60,7 +73,13 @@ public static class StageContentRules
             return "Item ids must be unique.";
         }
 
-        return items.Any(i => i.Tags.Count > MaxTags || i.Tags.Any(t => t.Length > MaxTagLength) || i.Refs.Count > MaxRefs)
+        if (items.Any(i => i.Id.Length > MaxIdLength))
+        {
+            return "An item id is too long.";
+        }
+
+        return items.Any(i => i.Tags.Count > MaxTags || i.Tags.Any(t => t.Length > MaxTagLength)
+                              || i.Refs.Count > MaxRefs || i.Refs.Any(r => r.Length > MaxRefLength))
             ? "An item has too many or too long tags or references."
             : null;
     }

@@ -30,17 +30,22 @@ public sealed class EditStageHandler(
             return Result<StageVersionDto>.Failure(AnalysisErrors.NotAvailable("The analysis is reviewed, not edited by hand."));
         }
 
-        var content = StageContentRules.Normalize(command.Content);
-        if (StageContentRules.Problem(content) is { } problem)
-        {
-            return Result<StageVersionDto>.Failure(Error.Validation("content", problem));
-        }
-
         var opened = await ProjectAccess.OpenForRoleAsync(
             projects, currentUser, command.ProjectId, StageRules.ApproverRole(command.Stage), cancellationToken);
         if (opened.IsFailure)
         {
             return Result<StageVersionDto>.Failure(opened.Error);
+        }
+
+        if (StageContentRules.HasMissingParts(command.Content))
+        {
+            return Result<StageVersionDto>.Failure(Error.Validation("content", "The content is incomplete."));
+        }
+
+        var content = StageContentRules.Normalize(command.Content);
+        if (StageContentRules.Problem(content) is { } problem)
+        {
+            return Result<StageVersionDto>.Failure(Error.Validation("content", problem));
         }
 
         var project = opened.Value;

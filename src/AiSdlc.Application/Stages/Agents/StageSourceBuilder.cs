@@ -46,6 +46,12 @@ public static class StageSourceBuilder
             AppendApproved(project, ArtifactStage.Tasks, "Tasks:", text, known);
         }
 
+        if (text.Length > AiLimits.MaxSourceCharacters)
+        {
+            return Result<StageSource>.Failure(AnalysisErrors.NotAvailable(
+                "The earlier stages are too long to draft from in one pass. Shorten them first."));
+        }
+
         return Result<StageSource>.Success(new StageSource(text.ToString(), known, project.CurrentTeam, project.SprintWeeks));
     }
 

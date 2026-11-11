@@ -1,0 +1,109 @@
+<header>
+  <h1>Users</h1>
+  <p class="sub">
+    Assign roles and deactivate accounts. Changes apply on the person's next request.
+  </p>
+</header>
+
+<div class="messages" aria-live="polite">
+  @if (errorMessage(); as message) {
+    <div class="alert alert-error" role="alert">{{ message }}</div>
+  }
+  @if (statusMessage(); as message) {
+    <div class="alert alert-success">{{ message }}</div>
+  }
+</div>
+
+<section class="card" aria-label="User accounts">
+  <div class="scroll">
+    <table>
+      <caption class="sr-only">
+        User accounts, their roles and status
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">User</th>
+          <th scope="col">Role</th>
+          <th scope="col">Status</th>
+          <th scope="col"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of users(); track user.id) {
+          <tr>
+            <th scope="row">
+              <span class="name"
+                >{{ user.displayName }}
+                @if (isSelf(user)) {
+                  <span class="pill">You</span>
+                }
+              </span>
+              <span class="email">{{ user.email }}</span>
+            </th>
+            <td>
+              <label class="sr-only" [for]="'role-' + user.id"
+                >Role for {{ user.displayName }}</label
+              >
+              <select
+                class="input plain"
+                [id]="'role-' + user.id"
+                [disabled]="isSelf(user)"
+                (change)="changeRole(user, $any($event.target).value)"
+              >
+                @for (role of roles; track role) {
+                  <option [value]="role" [selected]="role === user.role">
+                    {{ roleLabel(role) }}
+                  </option>
+                }
+              </select>
+            </td>
+            <td>
+              <span
+                class="pill"
+                [class.pill-success]="user.isActive"
+                [class.pill-danger]="!user.isActive"
+              >
+                {{ user.isActive ? 'Active' : 'Deactivated' }}
+              </span>
+            </td>
+            <td class="actions">
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-danger]="user.isActive"
+                [disabled]="isSelf(user)"
+                (click)="toggleActive(user)"
+              >
+                {{ user.isActive ? 'Deactivate' : 'Reactivate' }}
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="empty">
+              {{ loading() ? 'Loading users…' : 'No users found.' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    <span>{{ totalCount() }} users</span>
+    <span class="pager">
+      <button type="button" class="btn btn-sm" [disabled]="page() <= 1" (click)="goTo(page() - 1)">
+        Previous
+      </button>
+      <span>Page {{ page() }} of {{ totalPages() }}</span>
+      <button
+        type="button"
+        class="btn btn-sm"
+        [disabled]="page() >= totalPages()"
+        (click)="goTo(page() + 1)"
+      >
+        Next
+      </button>
+    </span>
+  </footer>
+</section>

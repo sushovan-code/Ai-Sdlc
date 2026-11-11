@@ -1,0 +1,31 @@
+<header class="bar">
+  <div class="left">
+    <a routerLink="/" class="home" aria-label="AI-Assisted SDLC home"><aisdlc-brand /></a>
+    <nav aria-label="Main">
+      <a routerLink="/projects" routerLinkActive="active">
+        <aisdlc-icon name="folder" /> Projects
+      </a>
+      @if (isAdmin()) {
+        <a routerLink="/users" routerLinkActive="active"> <aisdlc-icon name="users" /> Users </a>
+      }
+    </nav>
+  </div>
+
+  <div class="right">
+    <aisdlc-theme-switcher />
+    @if (user(); as current) {
+      <div class="who">
+        <span class="avatar" aria-hidden="true">{{ initials() }}</span>
+        <span class="who-text">
+          <span class="who-name">{{ current.displayName }}</span>
+          <aisdlc-role-pill [role]="current.role" />
+        </span>
+      </div>
+    }
+    <button type="button" class="btn btn-sm" (click)="signOut()">
+      <aisdlc-icon name="log-out" [size]="16" /> Sign out
+    </button>
+  </div>
+</header>
+
+<main class="page"><router-outlet /></main>

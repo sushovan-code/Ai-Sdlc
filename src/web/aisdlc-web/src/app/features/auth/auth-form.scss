@@ -1,0 +1,30 @@
+:host {
+  display: block;
+}
+
+form {
+  display: grid;
+  gap: 20px;
+}
+
+h2 {
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+
+.sub {
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+
+.submit {
+  width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+  box-shadow: 0 8px 20px rgb(79 70 229 / 28%);
+}
+
+.switch {
+  text-align: center;
+  color: var(--text-muted);
+}

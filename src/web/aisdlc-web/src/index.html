@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AI-Assisted SDLC</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <!-- Applies the saved theme before first paint so there is no flash of the wrong theme. -->
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('aisdlc.theme');
+          if (theme === 'light' || theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', theme);
+          }
+        } catch (e) {
+          /* storage unavailable: fall back to the system theme */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <aisdlc-root></aisdlc-root>
+  </body>
+</html>

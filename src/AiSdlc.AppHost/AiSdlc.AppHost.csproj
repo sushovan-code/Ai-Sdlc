@@ -4,6 +4,10 @@
     <ProjectReference Include="..\AiSdlc.Api\AiSdlc.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.JavaScript" Version="13.6.5" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>

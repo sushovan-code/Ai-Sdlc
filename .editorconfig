@@ -55,3 +55,11 @@ dotnet_naming_style.async_suffix.capitalization = pascal_case
 dotnet_diagnostic.CA2007.severity = none      # ConfigureAwait not needed in ASP.NET Core
 dotnet_diagnostic.CA2016.severity = warning   # forward CancellationToken
 dotnet_diagnostic.CA1848.severity = suggestion # LoggerMessage delegates for hot paths
+
+# Design: deliberate choices for this codebase
+dotnet_diagnostic.CA1716.severity = none      # `Error` is the standard Result-pattern name; the app is C#-only
+dotnet_diagnostic.CA1000.severity = none      # static factories (Result<T>.Success/Failure) are the intended API
+
+# EF Core generated migrations are not hand-formatted
+[**/Migrations/*.cs]
+generated_code = true

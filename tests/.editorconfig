@@ -1,0 +1,3 @@
+# Test naming follows docs/standards/testing.md: Method_State_ExpectedResult, so underscores are intended.
+[*.cs]
+dotnet_diagnostic.CA1707.severity = none

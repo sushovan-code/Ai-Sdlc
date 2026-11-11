@@ -29,13 +29,13 @@ Approve, reject, edit and comment each record reviewer, role, timestamp, comment
 
 ## Inputs
 - Requirements: `.docx` or `.txt`, up to 10 MB.
-- Team: `.xlsx` with columns Name, Role, Skills, Capacity, Availability. Capacity and Availability are hours per week (assumption, confirm).
+- Team: `.xlsx` with columns Name, Role, Skills, Capacity, Availability. Capacity and Availability are hours for a 2-week window (confirmed by the product owner). Availability must not exceed Capacity, and Capacity must not exceed 80 hours (10 working days x 8 hours); rows that break this are rejected with a clear message.
 - Every upload is a new version: type and signature checked, SHA-256 stored, access restricted to project members.
 
 ## Sprint planning
 - Cadence per project: 2, 3 or 4 weeks; default 2.
 - A working day counts as 8 hours.
-- Sprint capacity per member = Availability (hours per week) x weeks in sprint.
+- Sprint capacity per member = Availability x (sprint weeks / 2). A 2-week sprint uses Availability as is; 3 and 4-week sprints scale it proportionally (assumption, confirm).
 - Work that exceeds sprint 1 spills over to sprint 2, 3 and so on until every task is assigned. The assignment is done by a deterministic scheduler, not the LLM: tasks ordered by dependency then priority, each given to the best skill match with remaining hours in the earliest sprint.
 - A task larger than any one member's sprint capacity is flagged for the Project Manager to split.
 - Team page lists every member with allocated versus total hours as a progress bar, plus a per-sprint breakdown.

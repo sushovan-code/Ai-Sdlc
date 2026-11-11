@@ -43,7 +43,7 @@ internal sealed partial class FakeChatClient : IChatClient
 
     private static string SpecialistJson(string prompt)
     {
-        var chunks = ChunkLine().Matches(Document(prompt)).Select(m => (Id: m.Groups[1].Value, Text: m.Groups[2].Value.Trim())).ToList();
+        var chunks = ChunkLine().Matches(Document(prompt)).Select(m => (Id: m.Groups[1].Value, Text: m.Groups[2].Value.Trim().ReplaceLineEndings(" "))).ToList();
         var functional = chunks.Take(MaxRequirements).Select((c, i) => Requirement($"FR-{i + 1}", c)).ToList();
         var quality = chunks.Where(c => QualityWords.Any(w => c.Text.Contains(w, StringComparison.OrdinalIgnoreCase))).Take(3)
             .Select((c, i) => Requirement($"NFR-{i + 1}", c)).ToList();
@@ -85,7 +85,7 @@ internal sealed partial class FakeChatClient : IChatClient
 
     private static string Truncate(string text, int length) => text.Length <= length ? text : text[..length].TrimEnd() + "...";
 
-    [GeneratedRegex(@"^\[(C\d+)\] (.*)$", RegexOptions.Multiline)]
+    [GeneratedRegex(@"^\[(C\d+)\] (.*?)(?=^\[C\d+\] |\z)", RegexOptions.Multiline | RegexOptions.Singleline)]
     private static partial Regex ChunkLine();
 
     [GeneratedRegex(@"<reviewer_feedback>\s*(.*?)\s*</reviewer_feedback>", RegexOptions.Singleline)]

@@ -28,10 +28,10 @@ import { ToastService } from '../../../core/notifications/toast.service';
 import { Icon } from '../../../shared/ui/icon/icon';
 import { Stepper } from '../../../shared/ui/stepper/stepper';
 import { AnalysisPanel } from '../analysis-panel/analysis-panel';
+import { WrapupPanel } from '../wrapup-panel/wrapup-panel';
 import { StageReview } from '../stage-review/stage-review';
 import { ProjectFiles, UploadRequest } from '../project-files/project-files';
 import { ProjectTeam } from '../project-team/project-team';
-import { StagePanel } from '../stage-panel/stage-panel';
 import { TeamCapacity } from '../team-capacity/team-capacity';
 import { STAGE_LABELS } from '../stage-labels';
 import { WORKFLOW, blockReason, furthestStep, stepsFor } from '../workflow';
@@ -45,9 +45,9 @@ import { WORKFLOW, blockReason, furthestStep, stepsFor } from '../workflow';
     Stepper,
     AnalysisPanel,
     StageReview,
+    WrapupPanel,
     ProjectFiles,
     ProjectTeam,
-    StagePanel,
     TeamCapacity,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

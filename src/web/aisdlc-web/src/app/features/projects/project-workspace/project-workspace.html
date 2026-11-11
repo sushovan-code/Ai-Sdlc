@@ -96,9 +96,9 @@
         (approved)="gateApproved()"
       />
     </section>
-  } @else {
-    <section class="card">
-      <aisdlc-stage-panel [step]="selectedStep()" />
+  } @else if (selectedStep().key === 'wrapup') {
+    <section class="card panel" aria-label="Wrap-up">
+      <aisdlc-wrapup-panel [projectId]="current.id" />
     </section>
   }
 

@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using AiSdlc.Application.Common;
 using AiSdlc.Application.Stages;
+using AiSdlc.Application.Wrapup;
 using AiSdlc.Domain.Projects;
 using AiSdlc.IntegrationTests.Infrastructure;
 using Shouldly;
@@ -57,6 +59,16 @@ public sealed class StageFlowTests(ApiFactory factory)
             .ShouldBe(HttpStatusCode.NoContent);
 
         (await manager.GetProjectAsync(project)).Stage.ShouldBe(ProjectStage.TestCasesApproved);
+
+        // Wrap-up: traceability reaches test cases, the audit trail names the decisions, and the report downloads.
+        var trace = await manager.GetFromJsonAsync<TraceabilityDto>($"/api/v1/projects/{project}/traceability", ApiJson.Options);
+        trace!.Rows.ShouldContain(r => r.Architecture.Count > 0 && r.Tasks.Count > 0 && r.TestCases.Count > 0);
+        var audit = await manager.GetFromJsonAsync<PagedResult<AuditEntryDto>>($"/api/v1/projects/{project}/audit", ApiJson.Options);
+        audit!.Items.Select(e => e.Action).ShouldContain("stage.approved");
+        audit.Items.Select(e => e.Action).ShouldContain("ai.call");
+        var report = await manager.GetAsync($"/api/v1/projects/{project}/report");
+        report.StatusCode.ShouldBe(HttpStatusCode.OK);
+        (await report.Content.ReadAsStringAsync()).ShouldContain("## QA test cases");
     }
 
     [Fact]

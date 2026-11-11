@@ -22,6 +22,13 @@ public static class ProjectErrors
     public static Error RoleRequired(string roleLabel) =>
         new(ManagerRequiredCode, $"Only the {roleLabel} can do this.", ErrorType.Forbidden);
 
+    public const string AuditRestrictedCode = "project.audit-restricted";
+
+    public static Error AuditRestricted { get; } = new(
+        AuditRestrictedCode,
+        "The audit trail is for the Project Manager, Architect and QA.",
+        ErrorType.Forbidden);
+
     public static Error AlreadyMember { get; } =
         new(AlreadyMemberCode, "That user is already on the project.", ErrorType.Conflict);
 

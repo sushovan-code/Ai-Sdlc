@@ -9,8 +9,9 @@ AI-assisted software development lifecycle: AI drafts requirements analysis, arc
 
 ## What it does
 - Upload a requirements document (`.docx` or `.txt`) and a team sheet (`.xlsx` with name, role, skills, capacity, availability); files are validated, hashed and versioned.
-- AI analyses the requirements into functional and non-functional requirements, questions and risks, each backed by quotes from the document; the Project Manager approves, rejects, or regenerates it with written feedback (built). It then drafts an architecture plan, breaks it into development tasks and generates QA test cases.
-- Four human review gates (analysis, architecture, tasks, test cases) with role-based approval; reviewers can regenerate any output with written feedback.
+- AI analyses the requirements into functional and non-functional requirements, questions and risks, each backed by quotes from the document; the Project Manager approves, rejects, or regenerates it with written feedback (built). The same flow then drafts the architecture plan (Software Architect), the development tasks (Project Manager) and the QA test cases (QA). Each reviewer can edit a draft by hand.
+- Four human review gates (analysis, architecture, tasks, test cases), each approved by its own role; reviewers can regenerate any output with written feedback or correct it by hand.
+- A wrap-up step traces every requirement to its design, tasks and tests, shows the project audit trail and downloads a Markdown report.
 - Tasks are scheduled across sprints (2, 3 or 4 weeks, default 2; 8 working hours a day) and spill into later sprints until everything is assigned; the team page shows each member's utilisation as a progress bar.
 - Full audit trail of uploads, AI calls, decisions and edits.
 
@@ -121,7 +122,9 @@ You can also create an account on the sign-in page. New accounts start as Develo
 3. Under **Team**, pick people from the suggestions (or filter by name) and select **Add**. Only people added to a project can see it.
 4. Use **Next** and **Previous** (or the stepper) to move between stages. **Next** stays disabled, with the reason shown beside it, until the stage is complete and the review gate that closes it is approved by the right role.
 5. After both files are uploaded, open **Analysis** and select **Generate with AI**. Read the draft (requirements with evidence quotes, questions, risks and an automatic review), type a comment and select **Regenerate** to get a new version, or select **Approve** to pass gate 1. **Reject** needs a reason. Approving unlocks the next stage and locks the requirements.
-6. Sign out and sign in as `architect@demo.local`: the project is visible, files can be downloaded but not uploaded or deleted. Sign in as `qa@demo.local` (not added): the project is not listed, and opening its URL shows "Project not found".
+6. Add `architect@demo.local` and `qa@demo.local` to the project (Project members). Sign in as the Architect, open **Architecture** and generate, edit and approve it (gate 2). Back as the Project Manager, open **Tasks**: the scheduler places the tasks across sprints and the team panel shows booked hours; approve (gate 3). Sign in as QA, generate and approve the **Test cases** (gate 4). Each stage only shows its actions to the role that reviews it.
+7. Open **Wrap-up** (unlocks after gate 4): the traceability table, the audit trail and **Download report**.
+8. Sign out and sign in as `architect@demo.local`: the project is visible, files can be downloaded but not uploaded or deleted. Sign in as `qa@demo.local` (not added): the project is not listed, and opening its URL shows "Project not found".
 
 Files are checked for type, size (10 MB), signature and structure; macro-enabled files and mismatched content are rejected.
 

@@ -23,7 +23,10 @@ internal sealed partial class FakeChatClient : IChatClient
         var all = messages.ToList();
         var isCritic = all.Any(m => m.Role == ChatRole.System && m.Text.Contains(CriticMarker, StringComparison.Ordinal));
         var user = all.Last(m => m.Role == ChatRole.User).Text;
-        var json = isCritic ? CriticJson() : SpecialistJson(user);
+        var system = all.FirstOrDefault(m => m.Role == ChatRole.System)?.Text ?? string.Empty;
+        var json = FakeStageAnswers.IsStagePrompt(system)
+            ? FakeStageAnswers.Answer(system, user)
+            : isCritic ? CriticJson() : SpecialistJson(user);
         return Task.FromResult(new ChatResponse(new ChatMessage(ChatRole.Assistant, json)) { ModelId = ModelName });
     }
 

@@ -58,6 +58,6 @@ public static class AnalysisErrors
         GateOutcome.NotFound => VersionNotFound,
         GateOutcome.NotLatest => NotLatest,
         GateOutcome.NotPending => NotPending,
-        _ => NotAvailable("The analysis can only be decided after both files are uploaded and before it is approved."),
+        _ => NotAvailable("This stage can only be decided at its point in the project, before it is approved."),
     };
 }

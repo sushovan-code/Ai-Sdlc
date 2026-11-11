@@ -102,7 +102,7 @@ public static class AnalysisJson
         (refs ?? []).Where(r => !string.IsNullOrWhiteSpace(r)).Select(r => r.Trim()).ToList();
 
     /// <summary>Models sometimes wrap JSON in a markdown code fence even when told not to.</summary>
-    private static string StripFences(string text)
+    public static string StripFences(string text)
     {
         var trimmed = text.Trim();
         if (!trimmed.StartsWith("```", StringComparison.Ordinal))

@@ -1,5 +1,5 @@
 ## Summary
-Slice 4: AI drafts the requirements analysis and the Project Manager reviews it at gate 1. Closes #<issue>
+Slice 4: AI drafts the requirements analysis and the Project Manager reviews it at gate 1.
 
 - **Generate**: a Project Manager generates a draft from the latest requirements file. A small pipeline runs: a governance guard masks personal data and secrets, the text is split into numbered chunks, a specialist agent drafts structured JSON (validated, one retry), a retrieval agent attaches quotes from the document as evidence, and a critic adds review notes. Every model call is audited.
 - **Regenerate with feedback**: one comment box. Each attempt is a new version; the previous draft and the comment go into the next prompt as data. History is kept.
@@ -26,3 +26,5 @@ Not captured yet (needs the app running in light and dark).
 - `containers.svg` is rendered and committed with its source.
 - Copilot icon is a stand-in; send the official SVG path to replace it.
 - Pre-existing, not from this branch: `.btn-primary` uses literal colours instead of tokens.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

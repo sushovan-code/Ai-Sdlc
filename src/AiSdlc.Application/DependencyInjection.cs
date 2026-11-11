@@ -16,6 +16,11 @@ using AiSdlc.Application.Projects.CreateProject;
 using AiSdlc.Application.Projects.GetProject;
 using AiSdlc.Application.Projects.ListProjects;
 using AiSdlc.Application.Projects.RemoveProjectMember;
+using AiSdlc.Application.Stages.Agents;
+using AiSdlc.Application.Stages.DecideStage;
+using AiSdlc.Application.Stages.EditStage;
+using AiSdlc.Application.Stages.GenerateStage;
+using AiSdlc.Application.Stages.GetStage;
 using AiSdlc.Application.Team.GetTeam;
 using AiSdlc.Application.Team.SetSprintCadence;
 using AiSdlc.Application.UserDirectory.SearchUsers;
@@ -62,6 +67,12 @@ public static class DependencyInjection
         services.AddScoped<GetAnalysisHandler>();
         services.AddScoped<ApproveAnalysisHandler>();
         services.AddScoped<RejectAnalysisHandler>();
+
+        services.AddScoped<StageGenerator>();
+        services.AddScoped<GenerateStageHandler>();
+        services.AddScoped<GetStageHandler>();
+        services.AddScoped<DecideStageHandler>();
+        services.AddScoped<EditStageHandler>();
 
         return services;
     }

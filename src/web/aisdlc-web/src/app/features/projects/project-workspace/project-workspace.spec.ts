@@ -62,7 +62,7 @@ describe('ProjectWorkspacePage', () => {
     expect(text).toContain('Express Checkout');
     expect(text).toContain('You are Project Manager');
     expect(text).toContain('Draft');
-    expect(host(fixture).querySelectorAll('aisdlc-stepper li').length).toBe(5);
+    expect(host(fixture).querySelectorAll('aisdlc-stepper li').length).toBe(6);
   });
 
   it('moves the stepper past "Files & team" once both inputs are in', async () => {

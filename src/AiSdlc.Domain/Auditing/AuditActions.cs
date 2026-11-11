@@ -22,6 +22,12 @@ public static class AuditActions
     public const string AnalysisGenerated = "analysis.generated";
     public const string AnalysisApproved = "analysis.approved";
     public const string AnalysisRejected = "analysis.rejected";
+    public const string StageGenerated = "stage.generated";
+    public const string StageApproved = "stage.approved";
+    public const string StageRejected = "stage.rejected";
+    public const string StageEdited = "stage.edited";
+    public const string ProjectDeleted = "project.deleted";
+    public const string ReportDownloaded = "report.downloaded";
     public const string TeamImported = "team.imported";
     public const string SprintCadenceChanged = "project.sprint-cadence-changed";
 }

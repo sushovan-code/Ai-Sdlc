@@ -1,7 +1,10 @@
 using AiSdlc.Application.Abstractions;
 using AiSdlc.Application.Common;
 using AiSdlc.Application.Projects;
+using AiSdlc.Application.Stages;
+using AiSdlc.Domain.Artifacts;
 using AiSdlc.Domain.Planning;
+using AiSdlc.Domain.Projects;
 
 namespace AiSdlc.Application.Team.GetTeam;
 
@@ -22,8 +25,8 @@ public sealed class GetTeamHandler(ICurrentUser currentUser, IProjectRepository 
             .Select(m => new SprintMember(m.Id, m.Name, m.Skills, SprintRules.SprintHours(m.AvailabilityHours, project.SprintWeeks)))
             .ToList();
 
-        // Work is given to people by the task slice; until tasks are scheduled nothing is booked yet.
-        var utilization = UtilizationCalculator.Calculate(members, []).ToDictionary(u => u.MemberId);
+        // Booked hours come from the newest task plan still in play (waiting for review or approved); none until then.
+        var utilization = UtilizationCalculator.Calculate(members, BookedAssignments(project)).ToDictionary(u => u.MemberId);
 
         var rows = team.Select(m =>
         {
@@ -49,5 +52,19 @@ public sealed class GetTeamHandler(ICurrentUser currentUser, IProjectRepository 
             rows.Sum(r => r.AllocatedHours),
             rows.Sum(r => r.TotalCapacityHours),
             rows));
+    }
+
+    private static List<Assignment> BookedAssignments(Project project)
+    {
+        var plan = project.Artifacts
+            .Where(a => a.Stage == ArtifactStage.Tasks && a.Status is ArtifactStatus.PendingReview or ArtifactStatus.Approved)
+            .OrderByDescending(a => a.Version)
+            .FirstOrDefault();
+
+        return plan is null
+            ? []
+            : StageMapper.ReadNotes(plan).Assignments
+                .Select(a => new Assignment(Guid.Empty, a.MemberId, a.Sprint, a.Hours))
+                .ToList();
     }
 }

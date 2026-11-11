@@ -2,7 +2,7 @@ import type { ProjectStage } from '../../core/api/api-types';
 import { AppRole, roleLabel } from '../../core/auth/roles';
 import type { Step } from '../../shared/ui/stepper/stepper';
 
-export type StepKey = 'files' | 'analysis' | 'architecture' | 'tasks' | 'tests';
+export type StepKey = 'files' | 'analysis' | 'architecture' | 'tasks' | 'tests' | 'wrapup';
 
 export interface Gate {
   number: number;
@@ -19,7 +19,7 @@ export interface WorkflowStep {
   gate: Gate | null;
 }
 
-/** The five lifecycle stages in order, each (except the first) closed by a human review gate. */
+/** The lifecycle stages in order: the first and last have no gate, the four in between are each closed by a human review gate. */
 export const WORKFLOW: readonly WorkflowStep[] = [
   {
     key: 'files',
@@ -54,11 +54,24 @@ export const WORKFLOW: readonly WorkflowStep[] = [
     summary: 'AI generates QA test cases traced back to the requirements and the tasks.',
     gate: { number: 4, name: 'Test-case approval', approver: AppRole.QA },
   },
+  {
+    key: 'wrapup',
+    label: 'Wrap-up',
+    summary:
+      'Trace every requirement to its design, tasks and tests, then review the audit trail and take the report.',
+    gate: null,
+  },
 ];
 
 /** The furthest stage a project can currently be opened at. Later review stages extend this. */
 export function furthestStep(stage: ProjectStage): number {
   switch (stage) {
+    case 'TestCasesApproved':
+      return 5;
+    case 'TasksApproved':
+      return 4;
+    case 'ArchitectureApproved':
+      return 3;
     case 'AnalysisApproved':
       return 2;
     case 'FilesUploaded':

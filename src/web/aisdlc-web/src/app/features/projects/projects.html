@@ -1,0 +1,97 @@
+<header class="head">
+  <h1>Projects</h1>
+  <p class="sub">
+    Each project moves from requirements to approved test cases through four review gates.
+  </p>
+</header>
+
+@if (errorMessage(); as message) {
+  <div class="alert alert-error" role="alert">{{ message }}</div>
+}
+
+@if (canCreate()) {
+  <section class="card create" aria-labelledby="new-title">
+    <div class="create-head">
+      <span class="plus"><aisdlc-icon name="plus" [size]="20" /></span>
+      <div>
+        <h2 id="new-title">New project</h2>
+        <p class="sub">Give it a name, then upload the requirements.</p>
+      </div>
+    </div>
+    <form [formGroup]="form" (ngSubmit)="create()" novalidate>
+      <div class="field">
+        <label for="project-name">Name</label>
+        <input
+          id="project-name"
+          class="input plain"
+          type="text"
+          formControlName="name"
+          placeholder="e.g. Express Checkout"
+          [attr.aria-invalid]="nameInvalid()"
+        />
+        @if (nameInvalid()) {
+          <span class="error">Enter a name of 3 to 100 characters.</span>
+        }
+        @if (nameError(); as message) {
+          <span class="error">{{ message }}</span>
+        }
+      </div>
+      <div class="field">
+        <label for="project-description">Description (optional)</label>
+        <input
+          id="project-description"
+          class="input plain"
+          type="text"
+          formControlName="description"
+          placeholder="What is this project about?"
+        />
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="creating()">
+        <aisdlc-icon name="plus" [size]="16" /> {{ creating() ? 'Creating…' : 'Create project' }}
+      </button>
+    </form>
+  </section>
+}
+
+@if (projects().length > 0) {
+  <ul class="grid" aria-label="Your projects">
+    @for (project of projects(); track project.id) {
+      <li class="card project">
+        <span class="pill" [class]="'pill ' + stagePillClass(project.stage)">{{
+          stageLabels[project.stage]
+        }}</span>
+        <h2>{{ project.name }}</h2>
+        <p class="desc">{{ project.description || 'No description' }}</p>
+        <p class="facts">
+          <span [class.ok]="project.hasRequirements"
+            >Requirements {{ project.hasRequirements ? '✓' : '–' }}</span
+          >
+          <span [class.ok]="project.hasTeamTemplate"
+            >Team {{ project.hasTeamTemplate ? '✓' : '–' }}</span
+          >
+          <span>{{ project.memberCount }} member(s)</span>
+        </p>
+        <footer>
+          <span>{{ project.createdAtUtc | date: 'mediumDate' }}</span>
+          <a class="open" [routerLink]="['/projects', project.id]">
+            Open <aisdlc-icon name="arrow-right" [size]="16" />
+          </a>
+        </footer>
+      </li>
+    }
+  </ul>
+} @else if (!loading()) {
+  <section class="card empty" aria-labelledby="empty-title">
+    <span class="plus"><aisdlc-icon name="folder" [size]="28" /></span>
+    <h2 id="empty-title">No projects yet</h2>
+    <p>
+      @if (canCreate()) {
+        Create your first project above to get started.
+      } @else {
+        A Project Manager will add you to a project.
+      }
+    </p>
+  </section>
+} @else {
+  <p class="sub">Loading projects…</p>
+}

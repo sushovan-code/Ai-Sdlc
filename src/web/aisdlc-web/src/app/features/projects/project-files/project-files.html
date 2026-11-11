@@ -1,0 +1,73 @@
+<div class="drops">
+  <aisdlc-file-drop
+    title="Requirements document"
+    hint=".docx or .txt, up to 10 MB"
+    icon="file"
+    [accept]="requirementExtensions"
+    [uploaded]="requirements().length > 0"
+    [busy]="busyKind() === 'Requirements'"
+    [disabled]="!project().canManage"
+    (picked)="upload.emit({ kind: 'Requirements', file: $event })"
+  />
+  <aisdlc-file-drop
+    title="Team template"
+    hint=".xlsx with Name, Role, Skills, Capacity, Availability"
+    icon="users"
+    [accept]="teamExtensions"
+    [uploaded]="team().length > 0"
+    [busy]="busyKind() === 'TeamTemplate'"
+    [disabled]="!project().canManage"
+    (picked)="upload.emit({ kind: 'TeamTemplate', file: $event })"
+  />
+</div>
+
+@if (project().files.length === 0) {
+  <p class="empty">No files yet. Upload the requirements and the team template to begin.</p>
+} @else {
+  <ul class="files">
+    @for (file of project().files; track file.id) {
+      <li class="file">
+        <span class="kind" [class.team]="file.kind === 'TeamTemplate'">
+          <aisdlc-icon [name]="file.kind === 'TeamTemplate' ? 'users' : 'file'" [size]="18" />
+        </span>
+        <div class="meta">
+          <span class="name">{{ file.fileName }}</span>
+          <span class="details">
+            <span class="pill">{{
+              file.kind === 'TeamTemplate' ? 'Team template' : 'Requirements'
+            }}</span>
+            <span class="pill">v{{ file.version }}</span>
+            @if (file.isLatest) {
+              <span class="pill pill-success">Latest</span>
+            }
+            {{ formatBytes(file.sizeBytes) }} · {{ file.uploadedByName }} ·
+            {{ file.uploadedAtUtc | date: 'medium' }} · SHA {{ shortHash(file) }}
+          </span>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-sm" (click)="download.emit(file)">
+            <aisdlc-icon name="download" [size]="14" /> Download
+          </button>
+          @if (project().canManage) {
+            @if (pendingDelete() === file.id) {
+              <button type="button" class="btn btn-sm btn-danger" (click)="confirmRemove(file)">
+                Confirm delete
+              </button>
+              <button type="button" class="btn btn-sm" (click)="pendingDelete.set(null)">
+                Cancel
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn-sm btn-danger"
+                (click)="pendingDelete.set(file.id)"
+              >
+                <aisdlc-icon name="trash" [size]="14" /> Delete
+              </button>
+            }
+          }
+        </div>
+      </li>
+    }
+  </ul>
+}

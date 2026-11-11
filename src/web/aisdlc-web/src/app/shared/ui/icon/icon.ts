@@ -18,6 +18,15 @@ const ICON_PATHS = {
   moon: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',
   monitor: 'M3 4h18v12H3z M8 20h8 M12 16v4',
   plus: 'M12 5v14 M5 12h14',
+  check: 'M5 13l4 4L19 7',
+  upload: 'M12 16V4 M7 9l5-5 5 5 M4 20h16',
+  download: 'M12 4v12 M7 11l5 5 5-5 M4 20h16',
+  trash: 'M4 7h16 M9 7V4h6v3 M6 7l1 13h10l1-13 M10 11v6 M14 11v6',
+  file: 'M6 3h8l5 5v13H6z M14 3v5h5',
+  'arrow-left': 'M19 12H5 M11 6l-6 6 6 6',
+  'arrow-right': 'M5 12h14 M13 6l6 6-6 6',
+  'user-plus':
+    'M15 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M8.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M19 8v6 M16 11h6',
   alert:
     'M12 9v4 M12 17h.01 M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z',
 } as const;

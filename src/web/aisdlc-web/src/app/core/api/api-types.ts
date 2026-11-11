@@ -17,3 +17,57 @@ export interface UserPage {
 }
 
 export const API_BASE = '/api/v1';
+
+export type FileKind = components['schemas']['FileKind'];
+export type ProjectStage = components['schemas']['ProjectStage'];
+export type ProjectMember = components['schemas']['ProjectMemberDto'];
+export type CreateProjectRequest = components['schemas']['CreateProjectRequest'];
+
+export interface Page<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+export interface ProjectSummary {
+  id: string;
+  name: string;
+  description: string | null;
+  stage: ProjectStage;
+  createdAtUtc: string;
+  memberCount: number;
+  hasRequirements: boolean;
+  hasTeamTemplate: boolean;
+}
+
+export interface ProjectFile {
+  id: string;
+  kind: FileKind;
+  version: number;
+  fileName: string;
+  sizeBytes: number;
+  sha256: string;
+  uploadedAtUtc: string;
+  uploadedById: string;
+  uploadedByName: string;
+  isLatest: boolean;
+}
+
+export interface ProjectDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  stage: ProjectStage;
+  createdAtUtc: string;
+  createdById: string;
+  canManage: boolean;
+  members: ProjectMember[];
+  files: ProjectFile[];
+}
+
+/** Route segment the API uses for each kind of file. */
+export const FILE_KIND_ROUTES: Record<FileKind, string> = {
+  Requirements: 'requirements',
+  TeamTemplate: 'team-template',
+};

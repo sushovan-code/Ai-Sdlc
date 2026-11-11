@@ -1,0 +1,55 @@
+<a routerLink="/projects" class="back"
+  ><aisdlc-icon name="arrow-left" [size]="16" /> All projects</a
+>
+
+<div class="messages" aria-live="polite">
+  @if (errorMessage(); as message) {
+    <div class="alert alert-error" role="alert">{{ message }}</div>
+  }
+  @if (statusMessage(); as message) {
+    <div class="alert alert-success">{{ message }}</div>
+  }
+</div>
+
+@if (project(); as current) {
+  <header class="banner">
+    <div class="pills">
+      <span class="pill-dark">{{ stageLabels[current.stage] }}</span>
+      <span class="pill-dark">You are {{ myRole() }}</span>
+    </div>
+    <h1>{{ current.name }}</h1>
+    @if (current.description) {
+      <p>{{ current.description }}</p>
+    }
+  </header>
+
+  <section class="card stepper" aria-label="Lifecycle">
+    <aisdlc-stepper [steps]="steps()" />
+  </section>
+
+  <section class="card panel" aria-labelledby="files-title">
+    <h2 id="files-title">Project files</h2>
+    <p class="sub">
+      Upload the requirements document and the team template. Every upload is a new version.
+    </p>
+    <aisdlc-project-files
+      [project]="current"
+      [busyKind]="uploadingKind()"
+      (upload)="upload($event)"
+      (download)="download($event)"
+      (remove)="removeFile($event)"
+    />
+  </section>
+
+  <section class="card panel" aria-labelledby="team-title">
+    <h2 id="team-title">Team</h2>
+    <p class="sub">{{ current.members.length }} member(s) can see this project.</p>
+    <aisdlc-project-team
+      [project]="current"
+      (add)="addMember($event)"
+      (remove)="removeMember($event)"
+    />
+  </section>
+} @else if (loading()) {
+  <p class="loading">Loading project…</p>
+}

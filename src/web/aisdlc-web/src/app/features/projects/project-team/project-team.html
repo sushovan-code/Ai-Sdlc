@@ -1,0 +1,70 @@
+<ul class="members" aria-label="Project members">
+  @for (member of project().members; track member.userId) {
+    <li>
+      <span class="avatar" aria-hidden="true">{{ member.displayName.charAt(0) }}</span>
+      <span class="who">
+        <span class="name">{{ member.displayName }}</span>
+        <span class="email">{{ member.email }}</span>
+      </span>
+      <aisdlc-role-pill [role]="member.role" />
+      @if (member.isOwner) {
+        <span class="pill">Owner</span>
+      } @else if (project().canManage) {
+        <button
+          type="button"
+          class="btn btn-sm btn-danger"
+          [attr.aria-label]="'Remove ' + member.displayName"
+          (click)="remove.emit(member)"
+        >
+          Remove
+        </button>
+      }
+    </li>
+  }
+</ul>
+
+@if (project().canManage) {
+  <div class="picker">
+    <label for="member-search">Add a team member</label>
+    <div class="input-wrap">
+      <aisdlc-icon name="user-plus" />
+      <input
+        id="member-search"
+        class="input"
+        type="search"
+        autocomplete="off"
+        placeholder="Search by name or email"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+      />
+    </div>
+    <div aria-live="polite">
+      @if (searching()) {
+        <p class="note">Searching…</p>
+      } @else if (hasSearched() && candidates().length === 0) {
+        <p class="note">No matching people to add.</p>
+      }
+    </div>
+    @if (candidates().length > 0) {
+      <ul class="results" aria-label="Search results">
+        @for (user of candidates(); track user.id) {
+          <li>
+            <span class="who">
+              <span class="name">{{ user.displayName }}</span>
+              <span class="email">{{ user.email }}</span>
+            </span>
+            <aisdlc-role-pill [role]="user.role" />
+            <button
+              type="button"
+              class="btn btn-sm"
+              [attr.aria-label]="'Add ' + user.displayName"
+              (click)="pick(user)"
+            >
+              <aisdlc-icon name="plus" [size]="14" /> Add
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+}

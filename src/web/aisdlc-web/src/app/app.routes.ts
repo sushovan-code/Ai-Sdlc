@@ -28,6 +28,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/projects/projects').then((m) => m.ProjectsPage),
       },
       {
+        path: 'projects/:projectId',
+        title: 'Project · AI-Assisted SDLC',
+        loadComponent: () =>
+          import('./features/projects/project-workspace/project-workspace').then(
+            (m) => m.ProjectWorkspacePage,
+          ),
+      },
+      {
         path: 'users',
         title: 'Users · AI-Assisted SDLC',
         canActivate: [roleGuard(AppRole.Admin)],

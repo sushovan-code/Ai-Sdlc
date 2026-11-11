@@ -1,0 +1,77 @@
+.drops {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.empty {
+  margin-top: 16px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.files {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.kind {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.kind.team {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.meta {
+  flex: 1;
+  min-width: 220px;
+}
+
+.name {
+  display: block;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .drops {
+    grid-template-columns: 1fr;
+  }
+}

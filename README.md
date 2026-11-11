@@ -81,7 +81,15 @@ Seeded in Development only (local data, not real credentials). All five share on
 
 You can also create an account on the sign-in page. New accounts start as Developers; sign in as the administrator and open **Users** to change a role.
 
-### 5. Run the tests
+### 5. Try it
+1. Sign in as `pm@demo.local`, enter a project name and select **Create project**.
+2. Upload a requirements file (`.docx` or `.txt`) and a team sheet (`.xlsx`); the stepper marks **Files & team** done when both are in. Uploading again adds a new version.
+3. Under **Team**, search for `architect` and add them. Sign out, sign in as `architect@demo.local`: the project is visible, files can be downloaded, but not uploaded or deleted.
+4. Sign in as `qa@demo.local`: the project is not listed, and opening its URL shows "Project not found".
+
+Files are checked for type, size (10 MB), signature and structure; macro-enabled files and mismatched content are rejected.
+
+### 6. Run the tests
 ```bash
 dotnet test
 npm run test:ci --prefix src/web/aisdlc-web

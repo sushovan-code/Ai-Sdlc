@@ -1,0 +1,37 @@
+<div
+  class="drop"
+  [class.dragging]="dragging()"
+  [class.disabled]="disabled()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="dragging.set(false)"
+  (drop)="onDrop($event)"
+>
+  <span class="icon"><aisdlc-icon [name]="icon()" [size]="22" /></span>
+  <strong>{{ title() }}</strong>
+  <span class="hint">{{ hint() }}</span>
+
+  @if (disabled()) {
+    <span class="note">Only a Project Manager can upload.</span>
+  } @else {
+    <label class="browse" [attr.for]="inputId">
+      {{
+        busy() ? 'Uploading…' : uploaded() ? 'Upload a new version' : 'Drop a file here, or browse'
+      }}
+    </label>
+    <input
+      class="sr-only"
+      type="file"
+      [id]="inputId"
+      [accept]="accept().join(',')"
+      [disabled]="busy()"
+      (change)="onChange($event)"
+    />
+  }
+
+  @if (uploaded() && !busy()) {
+    <span class="pill pill-success"><aisdlc-icon name="check" [size]="14" /> Uploaded</span>
+  }
+  @if (problem(); as message) {
+    <span class="problem" role="alert">{{ message }}</span>
+  }
+</div>

@@ -50,4 +50,4 @@ Approve, reject, edit and comment each record reviewer, role, timestamp, comment
 Role-based access, secure accounts (registration, password management, lockout, deactivation), human oversight, data security and privacy, AI auditability, retention and deletion.
 
 ## Out of scope for now
-Image generation (added behind an `IImageGenerator` port when the Foundry image model is provided), vector search, cloud deployment.
+Image generation (added behind an `IImageGenerator` port when an image model is chosen), vector search, cloud deployment.

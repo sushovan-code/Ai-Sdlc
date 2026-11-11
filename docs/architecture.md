@@ -10,11 +10,11 @@ Follows `docs/standards/architecture.md`. Single module, so projects are `AiSdlc
 | Identity | ASP.NET Core Identity + JWT | Roles: ProjectManager, Architect, Developer, QA, Admin |
 | Database | SQLite via EF Core | One file under `App_Data/`, created and seeded on start in Development |
 | File storage | `IFileStorage`, local-disk adapter | Folder under `App_Data/files`, never served statically |
-| AI | `IChatClient` (Microsoft.Extensions.AI) | `Ai:Provider` = `Fake` (tests, offline) or `Foundry` |
+| AI | `IChatClient` (Microsoft.Extensions.AI) | `Ai:Provider` = `Fake` (tests, offline) or `OpenAI` (gpt-5.4-mini for text generation) |
 | Orchestration | Aspire AppHost | Starts API and web; no Docker needed |
 
 ## Layers
-Domain (project, gate, artifact version, team member, sprint, scheduler) <- Application (use cases by feature, ports) <- Infrastructure (EF Core, Identity, storage, docx/xlsx parsing, Foundry adapter, agents) <- Api (endpoints, policies, composition root).
+Domain (project, gate, artifact version, team member, sprint, scheduler) <- Application (use cases by feature, ports) <- Infrastructure (EF Core, Identity, storage, docx/xlsx parsing, OpenAI adapter, agents) <- Api (endpoints, policies, composition root).
 
 ## Main flows
 1. Upload: validate type, size and signature, hash, store a new file version, audit.

@@ -27,7 +27,7 @@ See [docs/spec.md](docs/spec.md) for roles, gates and rules.
 Services and layers are described in [docs/architecture.md](docs/architecture.md). Key decisions are recorded in [docs/adr](docs/adr).
 
 ## Tech stack
-.NET 10 · ASP.NET Core Minimal APIs · EF Core · SQLite · ASP.NET Core Identity + JWT · Angular · Microsoft.Extensions.AI with Azure AI Foundry · Aspire · OpenTelemetry
+.NET 10 · ASP.NET Core Minimal APIs · EF Core · SQLite · ASP.NET Core Identity + JWT · Angular · Microsoft.Extensions.AI with OpenAI · Aspire · OpenTelemetry
 
 ## Run it locally
 
@@ -49,15 +49,13 @@ cd <repo>
 ```
 
 ### 2. Set secrets (never committed)
-The app runs offline with a fake AI provider. To use Azure AI Foundry set:
+The app runs offline with a fake AI provider. To use OpenAI for text generation (arrives with the AI slices) set:
 ```bash
-dotnet user-secrets --project src/AiSdlc.AppHost set "Parameters:foundry-endpoint" "<value>"
-dotnet user-secrets --project src/AiSdlc.AppHost set "Parameters:foundry-key" "<value>"
+dotnet user-secrets --project src/AiSdlc.AppHost set "Parameters:openai-api-key" "<value>"
 ```
 | Secret | Needed for | Where to get it |
 | --- | --- | --- |
-| `Parameters:foundry-endpoint` | AI text generation | Azure AI Foundry portal, your deployment's endpoint |
-| `Parameters:foundry-key` | AI text generation | Azure AI Foundry portal, Keys and Endpoint |
+| `Parameters:openai-api-key` | AI text generation (model `gpt-5.4-mini`) | OpenAI platform, API keys |
 
 ### 3. Run
 ```bash

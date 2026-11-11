@@ -9,7 +9,7 @@ flowchart LR
   api[API<br/><small>.NET 10 Minimal API, Identity + JWT</small>]:::ours
   db[(SQLite<br/><small>EF Core</small>)]:::ours
   files[(File storage<br/><small>local disk, IFileStorage</small>)]:::ours
-  ai[Azure AI Foundry<br/><small>text model via IChatClient</small>]:::ext
+  ai[OpenAI<br/><small>gpt-5.4-mini via IChatClient</small>]:::ext
 
   user --> web
   web -->|HTTPS, JSON, JWT| api

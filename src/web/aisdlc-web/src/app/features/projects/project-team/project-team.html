@@ -33,7 +33,7 @@
         class="input"
         type="search"
         autocomplete="off"
-        placeholder="Search by name or email"
+        placeholder="Filter by name or email"
         [value]="query()"
         (input)="query.set($any($event.target).value)"
       />
@@ -41,8 +41,12 @@
     <div aria-live="polite">
       @if (searching()) {
         <p class="note">Searching…</p>
-      } @else if (hasSearched() && candidates().length === 0) {
-        <p class="note">No matching people to add.</p>
+      } @else if (loaded() && candidates().length === 0) {
+        <p class="note">
+          {{
+            query().trim() ? 'No matching people to add.' : 'Everyone is already on this project.'
+          }}
+        </p>
       }
     </div>
     @if (candidates().length > 0) {

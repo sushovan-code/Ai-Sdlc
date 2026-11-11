@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { AppRole } from '../../../core/auth/roles';
+import { ToastService } from '../../../core/notifications/toast.service';
 import { Brand } from '../../ui/brand/brand';
 import { Icon } from '../../ui/icon/icon';
 import { RolePill } from '../../ui/role-pill/role-pill';
@@ -20,6 +21,7 @@ const INITIALS_LIMIT = 2;
 export class AppShell {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   protected readonly user = this.auth.user;
   protected readonly isAdmin = computed(() => this.auth.hasAnyRole([AppRole.Admin]));
@@ -34,6 +36,7 @@ export class AppShell {
 
   protected signOut(): void {
     this.auth.logout();
+    this.toast.info('You have been signed out.');
     void this.router.navigate(['/login']);
   }
 }

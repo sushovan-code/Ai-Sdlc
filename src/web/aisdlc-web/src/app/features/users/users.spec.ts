@@ -1,3 +1,4 @@
+import { toastMessages } from '../../testing/toasts';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -87,7 +88,7 @@ describe('UsersPage', () => {
     request.flush({ ...DEV, role: AppRole.QA });
     await fixture.whenStable();
 
-    expect(textOf(host(fixture))).toContain('Demo Developer is now QA.');
+    expect(toastMessages()).toContain('Demo Developer is now QA.');
   });
 
   it('deactivates a user and offers reactivation', async () => {
@@ -117,7 +118,7 @@ describe('UsersPage', () => {
       .flush({ title: 'User not found.' }, { status: 404, statusText: 'Not Found' });
     await fixture.whenStable();
 
-    expect(host(fixture).querySelector('[role="alert"]')?.textContent).toContain('User not found.');
+    expect(toastMessages().join(' ')).toContain('User not found.');
     http.expectOne((r) => r.url === '/api/v1/users').flush(listResponse([ADMIN]));
   });
 
@@ -144,7 +145,7 @@ describe('UsersPage', () => {
       .flush({ title: 'Forbidden' }, { status: 403, statusText: 'Forbidden' });
     await fixture.whenStable();
 
-    expect(host(fixture).querySelector('[role="alert"]')?.textContent).toContain('Forbidden');
+    expect(toastMessages().join(' ')).toContain('Forbidden');
     expect(textOf(host(fixture))).toContain('No users found.');
   });
 });

@@ -15,7 +15,6 @@ import { Icon } from '../../../shared/ui/icon/icon';
 import { RolePill } from '../../../shared/ui/role-pill/role-pill';
 
 const SEARCH_DEBOUNCE_MS = 250;
-const MIN_QUERY_LENGTH = 2;
 
 /** Who can see this project. A Project Manager can find colleagues and add or remove them. */
 @Component({
@@ -42,7 +41,8 @@ export class ProjectTeam {
     return this.results().filter((user) => !present.has(user.id));
   });
 
-  protected readonly hasSearched = computed(() => this.query().trim().length >= MIN_QUERY_LENGTH);
+  /** True once the first search has come back, so "nobody to add" is not shown while loading. */
+  protected readonly loaded = signal(false);
 
   constructor() {
     toObservable(this.query)
@@ -50,18 +50,15 @@ export class ProjectTeam {
         debounceTime(SEARCH_DEBOUNCE_MS),
         distinctUntilChanged(),
         switchMap((text) => {
-          const trimmed = text.trim();
-          if (trimmed.length < MIN_QUERY_LENGTH) {
-            return of<UserDto[]>([]);
-          }
           this.searching.set(true);
-          return this.api.searchPeople(trimmed).pipe(catchError(() => of<UserDto[]>([])));
+          return this.api.searchPeople(text.trim()).pipe(catchError(() => of<UserDto[]>([])));
         }),
         takeUntilDestroyed(),
       )
       .subscribe((users) => {
         this.results.set(users);
         this.searching.set(false);
+        this.loaded.set(true);
       });
   }
 

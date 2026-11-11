@@ -9,6 +9,7 @@ import {
 import { Router, RouterLink } from '@angular/router';
 import { fieldErrors, problemMessage } from '../../../core/api/problem';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ToastService } from '../../../core/notifications/toast.service';
 import { Icon } from '../../../shared/ui/icon/icon';
 import { AuthLayout } from '../auth-layout/auth-layout';
 
@@ -33,6 +34,7 @@ type FieldName = 'displayName' | 'email' | 'password' | 'confirmPassword';
 export class RegisterPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   protected readonly minPasswordLength = MIN_PASSWORD_LENGTH;
   protected readonly form = inject(NonNullableFormBuilder).group(
@@ -45,7 +47,6 @@ export class RegisterPage {
     { validators: passwordsMatch },
   );
   protected readonly submitting = signal(false);
-  protected readonly errorMessage = signal<string | null>(null);
   protected readonly serverErrors = signal<Record<string, string[]>>({});
 
   protected submit(): void {
@@ -55,16 +56,18 @@ export class RegisterPage {
     }
 
     this.submitting.set(true);
-    this.errorMessage.set(null);
     this.serverErrors.set({});
     const { displayName, email, password } = this.form.getRawValue();
     this.auth
       .register({ displayName: displayName.trim(), email: email.trim(), password })
       .subscribe({
-        next: () => void this.router.navigateByUrl('/'),
+        next: (user) => {
+          this.toast.success(`Account created. Welcome, ${user.displayName}.`);
+          void this.router.navigateByUrl('/');
+        },
         error: (error: unknown) => {
           this.serverErrors.set(fieldErrors(error));
-          this.errorMessage.set(problemMessage(error));
+          this.toast.error(problemMessage(error));
           this.submitting.set(false);
         },
       });

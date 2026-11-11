@@ -1,3 +1,4 @@
+import { toastMessages } from '../../../testing/toasts';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -101,7 +102,7 @@ describe('ProjectWorkspacePage', () => {
     respondWith(makeProject({ files: [makeFile({ fileName: 'reqs.txt' })] }));
     await fixture.whenStable();
 
-    expect(textOf(host(fixture))).toContain('reqs.txt uploaded.');
+    expect(toastMessages()).toContain('reqs.txt uploaded.');
     expect(host(fixture).querySelectorAll('.file').length).toBe(1);
   });
 
@@ -123,9 +124,7 @@ describe('ProjectWorkspacePage', () => {
       );
     await fixture.whenStable();
 
-    expect(host(fixture).querySelector('[role="alert"]')?.textContent).toContain(
-      'validation errors',
-    );
+    expect(toastMessages().join(' ')).toContain('validation errors');
   });
 
   it('asks for a second click before deleting a file', async () => {
@@ -141,7 +140,7 @@ describe('ProjectWorkspacePage', () => {
     respondWith(makeProject());
     await fixture.whenStable();
 
-    expect(textOf(host(fixture))).toContain('deleted.');
+    expect(toastMessages().join(' ')).toContain('deleted.');
   });
 
   it('offers upload, delete and member changes only to a manager', async () => {
@@ -185,7 +184,7 @@ describe('ProjectWorkspacePage', () => {
     respondWith(makeProject());
     await fixture.whenStable();
 
-    expect(textOf(host(fixture))).toContain('Ana Architect added to the project.');
+    expect(toastMessages()).toContain('Ana Architect added to the project.');
   });
 
   it('shows "not found" when the project is missing or you are not on it', async () => {
@@ -204,8 +203,6 @@ describe('ProjectWorkspacePage', () => {
       .flush({ title: 'Project not found.' }, { status: 404, statusText: 'Not Found' });
     await fixture.whenStable();
 
-    expect(host(fixture).querySelector('[role="alert"]')?.textContent).toContain(
-      'Project not found.',
-    );
+    expect(toastMessages().join(' ')).toContain('Project not found.');
   });
 });

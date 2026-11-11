@@ -1,3 +1,4 @@
+import { toastMessages } from '../../../testing/toasts';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -65,9 +66,7 @@ describe('LoginPage', () => {
       .flush({ title: 'Invalid email or password.' }, { status: 401, statusText: 'Unauthorized' });
     await fixture.whenStable();
 
-    expect(host(fixture).querySelector('[role="alert"]')?.textContent).toContain(
-      'Invalid email or password.',
-    );
+    expect(toastMessages().join(' ')).toContain('Invalid email or password.');
     expect(router.navigateByUrl).not.toHaveBeenCalled();
     const submit = host(fixture).querySelector<HTMLButtonElement>('button[type="submit"]');
     expect(submit?.disabled).toBe(false);

@@ -23,16 +23,19 @@ import { problemMessage } from '../../../core/api/problem';
 import { ProjectsApi } from '../../../core/api/projects-api';
 import { AuthService } from '../../../core/auth/auth.service';
 import { roleLabel } from '../../../core/auth/roles';
+import { ToastService } from '../../../core/notifications/toast.service';
 import { Icon } from '../../../shared/ui/icon/icon';
 import { Stepper } from '../../../shared/ui/stepper/stepper';
 import { ProjectFiles, UploadRequest } from '../project-files/project-files';
 import { ProjectTeam } from '../project-team/project-team';
-import { STAGE_LABELS, lifecycleSteps, stagePillClass } from '../stage-labels';
+import { StagePanel } from '../stage-panel/stage-panel';
+import { STAGE_LABELS } from '../stage-labels';
+import { WORKFLOW, blockReason, furthestStep, stepsFor } from '../workflow';
 
-/** One project: where it is in the lifecycle, its input files and who is on it. */
+/** One project: where it is in the lifecycle, the stage being viewed, its input files and who is on it. */
 @Component({
   selector: 'aisdlc-project-workspace',
-  imports: [RouterLink, Icon, Stepper, ProjectFiles, ProjectTeam],
+  imports: [RouterLink, Icon, Stepper, ProjectFiles, ProjectTeam, StagePanel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-workspace.html',
   styleUrl: './project-workspace.scss',
@@ -42,23 +45,54 @@ export class ProjectWorkspacePage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly document = inject(DOCUMENT);
   private readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
 
   /** Bound from the route parameter. */
   readonly projectId = input.required<string>();
 
   protected readonly project = signal<ProjectDetail | null>(null);
   protected readonly loading = signal(true);
-  protected readonly errorMessage = signal<string | null>(null);
-  protected readonly statusMessage = signal<string | null>(null);
+  protected readonly notFound = signal(false);
   protected readonly uploadingKind = signal<FileKind | null>(null);
 
-  protected readonly steps = computed(() => lifecycleSteps(this.project()?.stage ?? 'Draft'));
+  /** The stage being viewed. A project opens on its first stage, where the files are. */
+  private readonly viewed = signal<number | null>(null);
+
+  protected readonly stage = computed(() => this.project()?.stage ?? 'Draft');
+  protected readonly steps = computed(() => stepsFor(this.stage()));
+  protected readonly selectedIndex = computed(() => {
+    return Math.min(this.viewed() ?? 0, furthestStep(this.stage()));
+  });
+  protected readonly selectedStep = computed(() => WORKFLOW[this.selectedIndex()]);
+  protected readonly canGoPrevious = computed(() => this.selectedIndex() > 0);
+  protected readonly nextBlockedReason = computed(() =>
+    blockReason(this.stage(), this.selectedIndex()),
+  );
+  protected readonly canGoNext = computed(() => this.nextBlockedReason() === null);
+
   protected readonly stageLabels = STAGE_LABELS;
-  protected readonly stagePillClass = stagePillClass;
   protected readonly myRole = computed(() => roleLabel(this.auth.role() ?? ''));
 
   ngOnInit(): void {
     this.reload();
+  }
+
+  protected goTo(index: number): void {
+    if (index >= 0 && index <= furthestStep(this.stage())) {
+      this.viewed.set(index);
+    }
+  }
+
+  protected previous(): void {
+    if (this.canGoPrevious()) {
+      this.viewed.set(this.selectedIndex() - 1);
+    }
+  }
+
+  protected next(): void {
+    if (this.canGoNext()) {
+      this.viewed.set(this.selectedIndex() + 1);
+    }
   }
 
   protected upload(request: UploadRequest): void {
@@ -71,13 +105,15 @@ export class ProjectWorkspacePage implements OnInit {
   }
 
   protected download(file: ProjectFile): void {
-    this.errorMessage.set(null);
     this.api
       .download(this.projectId(), file.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (blob) => this.saveToDisk(blob, file.fileName),
-        error: (error: unknown) => this.errorMessage.set(problemMessage(error)),
+        next: (blob) => {
+          this.saveToDisk(blob, file.fileName);
+          this.toast.success(`Downloading ${file.fileName}.`);
+        },
+        error: (error: unknown) => this.toast.error(problemMessage(error)),
       });
   }
 
@@ -102,18 +138,16 @@ export class ProjectWorkspacePage implements OnInit {
     );
   }
 
-  /** Runs a change, then reloads the project so the screen always shows what the server holds. */
+  /** Runs a change, tells the user how it went, then reloads so the screen shows what the server holds. */
   private act(call: Observable<unknown>, success: string, done?: () => void): void {
-    this.errorMessage.set(null);
-    this.statusMessage.set(null);
     call.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.statusMessage.set(success);
+        this.toast.success(success);
         done?.();
         this.reload();
       },
       error: (error: unknown) => {
-        this.errorMessage.set(problemMessage(error));
+        this.toast.error(problemMessage(error));
         done?.();
       },
     });
@@ -129,7 +163,8 @@ export class ProjectWorkspacePage implements OnInit {
           this.loading.set(false);
         },
         error: (error: unknown) => {
-          this.errorMessage.set(problemMessage(error));
+          this.notFound.set(true);
+          this.toast.error(problemMessage(error));
           this.loading.set(false);
         },
       });

@@ -13,6 +13,7 @@ import type { UserDto } from '../../core/api/api-types';
 import { problemMessage } from '../../core/api/problem';
 import { AuthService } from '../../core/auth/auth.service';
 import { ALL_ROLES, roleLabel } from '../../core/auth/roles';
+import { ToastService } from '../../core/notifications/toast.service';
 
 const PAGE_SIZE = 20;
 
@@ -26,6 +27,7 @@ const PAGE_SIZE = 20;
 export class UsersPage implements OnInit {
   private readonly api = inject(UsersApi);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly toast = inject(ToastService);
   private readonly currentUserId = inject(AuthService).user()?.id;
 
   protected readonly roles = ALL_ROLES;
@@ -34,8 +36,6 @@ export class UsersPage implements OnInit {
   protected readonly page = signal(1);
   protected readonly totalCount = signal(0);
   protected readonly loading = signal(true);
-  protected readonly errorMessage = signal<string | null>(null);
-  protected readonly statusMessage = signal<string | null>(null);
 
   protected readonly totalPages = computed(() =>
     Math.max(1, Math.ceil(this.totalCount() / PAGE_SIZE)),
@@ -68,15 +68,13 @@ export class UsersPage implements OnInit {
   }
 
   private run(call: ReturnType<UsersApi['setRole']>, success: string): void {
-    this.errorMessage.set(null);
-    this.statusMessage.set(null);
     call.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (updated) => {
         this.users.update((list) => list.map((u) => (u.id === updated.id ? updated : u)));
-        this.statusMessage.set(success);
+        this.toast.success(success);
       },
       error: (error: unknown) => {
-        this.errorMessage.set(problemMessage(error));
+        this.toast.error(problemMessage(error));
         this.load(this.page());
       },
     });
@@ -95,7 +93,7 @@ export class UsersPage implements OnInit {
           this.loading.set(false);
         },
         error: (error: unknown) => {
-          this.errorMessage.set(problemMessage(error));
+          this.toast.error(problemMessage(error));
           this.loading.set(false);
         },
       });

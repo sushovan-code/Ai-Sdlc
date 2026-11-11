@@ -2,7 +2,6 @@ ol {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
-  gap: 0;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -12,13 +11,32 @@ li {
   position: relative;
   display: grid;
   justify-items: center;
+}
+
+.step {
+  z-index: 1;
+  display: grid;
+  justify-items: center;
   gap: 2px;
-  padding: 0 4px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
   text-align: center;
+  cursor: pointer;
+}
+
+.step:disabled {
+  cursor: not-allowed;
+}
+
+.step:not(:disabled):hover .label {
+  color: var(--accent);
 }
 
 .dot {
-  z-index: 1;
   display: grid;
   place-items: center;
   width: 32px;
@@ -27,6 +45,8 @@ li {
   border-radius: 50%;
   background: var(--surface);
   color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .done .dot {
@@ -38,6 +58,10 @@ li {
 .current .dot {
   border-color: var(--accent);
   background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.selected .dot {
   box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
@@ -51,6 +75,10 @@ li {
   color: var(--text-muted);
 }
 
+.selected .label {
+  color: var(--accent);
+}
+
 .caption {
   color: var(--text-muted);
   font-size: 12px;
@@ -58,9 +86,9 @@ li {
 
 .line {
   position: absolute;
-  top: 15px;
-  left: calc(50% + 20px);
-  right: calc(-50% + 20px);
+  top: 21px;
+  left: calc(50% + 28px);
+  right: calc(-50% + 28px);
   height: 2px;
   background: var(--border);
 }
@@ -76,5 +104,14 @@ li {
 
   .label {
     font-size: 11px;
+  }
+
+  .step {
+    padding: 4px 2px;
+  }
+
+  .line {
+    left: calc(50% + 22px);
+    right: calc(-50% + 22px);
   }
 }

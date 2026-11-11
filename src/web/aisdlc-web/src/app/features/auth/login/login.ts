@@ -3,6 +3,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { problemMessage } from '../../../core/api/problem';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ToastService } from '../../../core/notifications/toast.service';
 import { safeReturnUrl } from '../../../core/auth/return-url';
 import { Icon } from '../../../shared/ui/icon/icon';
 import { AuthLayout } from '../auth-layout/auth-layout';
@@ -18,13 +19,13 @@ export class LoginPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly toast = inject(ToastService);
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]],
   });
   protected readonly submitting = signal(false);
-  protected readonly errorMessage = signal<string | null>(null);
 
   protected submit(): void {
     if (this.form.invalid) {
@@ -33,15 +34,15 @@ export class LoginPage {
     }
 
     this.submitting.set(true);
-    this.errorMessage.set(null);
     const { email, password } = this.form.getRawValue();
     this.auth.login(email.trim(), password).subscribe({
-      next: () => {
+      next: (user) => {
+        this.toast.success(`Welcome back, ${user.displayName}.`);
         const returnUrl = safeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
         void this.router.navigateByUrl(returnUrl);
       },
       error: (error: unknown) => {
-        this.errorMessage.set(problemMessage(error));
+        this.toast.error(problemMessage(error));
         this.submitting.set(false);
       },
     });

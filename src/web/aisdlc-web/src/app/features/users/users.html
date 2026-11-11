@@ -5,15 +5,6 @@
   </p>
 </header>
 
-<div class="messages" aria-live="polite">
-  @if (errorMessage(); as message) {
-    <div class="alert alert-error" role="alert">{{ message }}</div>
-  }
-  @if (statusMessage(); as message) {
-    <div class="alert alert-success">{{ message }}</div>
-  }
-</div>
-
 <section class="card" aria-label="User accounts">
   <div class="scroll">
     <table>

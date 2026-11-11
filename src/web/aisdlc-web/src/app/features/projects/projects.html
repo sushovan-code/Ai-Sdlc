@@ -5,10 +5,6 @@
   </p>
 </header>
 
-@if (errorMessage(); as message) {
-  <div class="alert alert-error" role="alert">{{ message }}</div>
-}
-
 @if (canCreate()) {
   <section class="card create" aria-labelledby="new-title">
     <div class="create-head">

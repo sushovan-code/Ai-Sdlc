@@ -16,6 +16,7 @@ import { fieldErrors, problemMessage } from '../../core/api/problem';
 import { ProjectsApi } from '../../core/api/projects-api';
 import { AuthService } from '../../core/auth/auth.service';
 import { AppRole } from '../../core/auth/roles';
+import { ToastService } from '../../core/notifications/toast.service';
 import { Icon } from '../../shared/ui/icon/icon';
 import { STAGE_LABELS, stagePillClass } from './stage-labels';
 
@@ -37,12 +38,12 @@ export class ProjectsPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   private readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
 
   protected readonly canCreate = computed(() => this.auth.hasAnyRole([AppRole.ProjectManager]));
   protected readonly projects = signal<ProjectSummary[]>([]);
   protected readonly loading = signal(true);
   protected readonly creating = signal(false);
-  protected readonly errorMessage = signal<string | null>(null);
   protected readonly nameError = signal<string | null>(null);
   protected readonly stageLabels = STAGE_LABELS;
   protected readonly stagePillClass = stagePillClass;
@@ -69,7 +70,7 @@ export class ProjectsPage implements OnInit {
           this.loading.set(false);
         },
         error: (error: unknown) => {
-          this.errorMessage.set(problemMessage(error));
+          this.toast.error(problemMessage(error));
           this.loading.set(false);
         },
       });
@@ -82,17 +83,19 @@ export class ProjectsPage implements OnInit {
     }
 
     this.creating.set(true);
-    this.errorMessage.set(null);
     this.nameError.set(null);
     const { name, description } = this.form.getRawValue();
     this.api
       .create({ name: name.trim(), description: description.trim() || null })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (project) => void this.router.navigate(['/projects', project.id]),
+        next: (project) => {
+          this.toast.success(`Project “${project.name}” created.`);
+          void this.router.navigate(['/projects', project.id]);
+        },
         error: (error: unknown) => {
           this.nameError.set(fieldErrors(error)['name']?.[0] ?? null);
-          this.errorMessage.set(problemMessage(error));
+          this.toast.error(problemMessage(error));
           this.creating.set(false);
         },
       });

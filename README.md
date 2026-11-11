@@ -9,7 +9,7 @@ AI-assisted software development lifecycle: AI drafts requirements analysis, arc
 
 ## What it does
 - Upload a requirements document (`.docx` or `.txt`) and a team sheet (`.xlsx` with name, role, skills, capacity, availability); files are validated, hashed and versioned.
-- AI analyses the requirements, drafts an architecture plan, breaks it into development tasks and generates QA test cases.
+- AI analyses the requirements into functional and non-functional requirements, questions and risks, each backed by quotes from the document; the Project Manager approves, rejects, or regenerates it with written feedback (built). It then drafts an architecture plan, breaks it into development tasks and generates QA test cases.
 - Four human review gates (analysis, architecture, tasks, test cases) with role-based approval; reviewers can regenerate any output with written feedback.
 - Tasks are scheduled across sprints (2, 3 or 4 weeks, default 2; 8 working hours a day) and spill into later sprints until everything is assigned; the team page shows each member's utilisation as a progress bar.
 - Full audit trail of uploads, AI calls, decisions and edits.
@@ -50,13 +50,22 @@ cd ../../..
 ```
 
 ### 2. Secrets
-The app runs fully offline now. The AI features arrive in later slices and will need an OpenAI key, set as a user secret from your own terminal (never committed, never pasted into chat or a config file):
+No secret is needed to try the app. By default `Ai:Provider` is `Fake`, an offline model that drafts a simple analysis from your document so the whole flow works without a key or a network. To use the real model, set an OpenAI key as a user secret from your own terminal (never committed, never pasted into chat or a config file).
+
+With Aspire (option A), one secret switches the API to OpenAI:
 ```bash
 dotnet user-secrets --project src/AiSdlc.AppHost set "Parameters:openai-api-key" "<your key>"
 ```
+Standalone (option B), set the provider and key on the API project:
+```bash
+dotnet user-secrets --project src/AiSdlc.Api set "Ai:Provider" "OpenAI"
+dotnet user-secrets --project src/AiSdlc.Api set "Ai:ApiKey" "<your key>"
+```
 | Secret | Needed for | Where to get it |
 | --- | --- | --- |
-| `Parameters:openai-api-key` | AI text generation (model `gpt-5.4-mini`) | OpenAI platform, API keys |
+| `Parameters:openai-api-key` (AppHost) or `Ai:ApiKey` (API) | AI text generation with the real model (`Ai:Model`, default `gpt-5.4-mini`) | OpenAI platform, API keys |
+
+If `Ai:Provider` is `OpenAI` and no key is set, the API refuses to start and says so.
 
 ### 3. Run it, option A: with Aspire (one command)
 From the repository root:
@@ -111,7 +120,8 @@ You can also create an account on the sign-in page. New accounts start as Develo
 2. On **Files & team**, upload a requirements file (`.docx` or `.txt`) and a team sheet (`.xlsx`). Uploading again adds a new version.
 3. Under **Team**, pick people from the suggestions (or filter by name) and select **Add**. Only people added to a project can see it.
 4. Use **Next** and **Previous** (or the stepper) to move between stages. **Next** stays disabled, with the reason shown beside it, until the stage is complete and the review gate that closes it is approved by the right role.
-5. Sign out and sign in as `architect@demo.local`: the project is visible, files can be downloaded but not uploaded or deleted. Sign in as `qa@demo.local` (not added): the project is not listed, and opening its URL shows "Project not found".
+5. After both files are uploaded, open **Analysis** and select **Generate with AI**. Read the draft (requirements with evidence quotes, questions, risks and an automatic review), type a comment and select **Regenerate** to get a new version, or select **Approve** to pass gate 1. **Reject** needs a reason. Approving unlocks the next stage and locks the requirements.
+6. Sign out and sign in as `architect@demo.local`: the project is visible, files can be downloaded but not uploaded or deleted. Sign in as `qa@demo.local` (not added): the project is not listed, and opening its URL shows "Project not found".
 
 Files are checked for type, size (10 MB), signature and structure; macro-enabled files and mismatched content are rejected.
 

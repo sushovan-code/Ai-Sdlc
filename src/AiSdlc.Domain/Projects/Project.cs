@@ -1,3 +1,4 @@
+using AiSdlc.Domain.Artifacts;
 using AiSdlc.Domain.Planning;
 
 namespace AiSdlc.Domain.Projects;
@@ -8,6 +9,7 @@ public sealed class Project
     private readonly List<ProjectMember> _members = [];
     private readonly List<ProjectFile> _files = [];
     private readonly List<TeamMember> _team = [];
+    private readonly List<ArtifactVersion> _artifacts = [];
 
     private Project()
     {
@@ -34,6 +36,12 @@ public sealed class Project
 
     /// <summary>Every team-sheet row ever imported, across versions. Use <see cref="CurrentTeam"/> to plan with.</summary>
     public IReadOnlyCollection<TeamMember> Team => _team;
+
+    /// <summary>Every AI draft and its review history, across stages and versions.</summary>
+    public IReadOnlyCollection<ArtifactVersion> Artifacts => _artifacts;
+
+    /// <summary>Once the analysis is approved the requirements are frozen, so the approved analysis stays true to them.</summary>
+    public bool RequirementsLocked => Stage >= ProjectStage.AnalysisApproved;
 
     /// <summary>The people on the newest team sheet that has not been deleted.</summary>
     public IReadOnlyList<TeamMember> CurrentTeam
@@ -104,6 +112,11 @@ public sealed class Project
         Guid uploadedBy,
         DateTimeOffset now)
     {
+        if (kind == FileKind.Requirements && RequirementsLocked)
+        {
+            throw new InvalidOperationException("The requirements cannot change after the analysis is approved.");
+        }
+
         var nextVersion = _files.Where(f => f.Kind == kind).Select(f => f.Version).DefaultIfEmpty(0).Max() + 1;
         var file = new ProjectFile
         {
@@ -131,6 +144,11 @@ public sealed class Project
         if (file is null)
         {
             return null;
+        }
+
+        if (file.Kind == FileKind.Requirements && RequirementsLocked)
+        {
+            throw new InvalidOperationException("The requirements cannot change after the analysis is approved.");
         }
 
         file.MarkDeleted(deletedBy, now);
@@ -176,8 +194,111 @@ public sealed class Project
     public ProjectFile? LatestFile(FileKind kind) =>
         _files.Where(f => f.Kind == kind && !f.IsDeleted).OrderByDescending(f => f.Version).FirstOrDefault();
 
+    /// <summary>The newest version of an AI output for a stage, whatever its status.</summary>
+    public ArtifactVersion? LatestArtifact(ArtifactStage stage) =>
+        _artifacts.Where(a => a.Stage == stage).OrderByDescending(a => a.Version).FirstOrDefault();
+
+    /// <summary>Analysis can be drafted (or redrafted) once both inputs are in and until gate 1 is passed.</summary>
+    public bool CanDraftAnalysis => Stage == ProjectStage.FilesUploaded;
+
+    /// <summary>Adds a new draft of the analysis; any draft still waiting for review is superseded.</summary>
+    public ArtifactVersion AddAnalysisDraft(
+        string contentJson,
+        string? notesJson,
+        ArtifactSource source,
+        string model,
+        string promptVersion,
+        string? feedback,
+        Guid createdBy,
+        DateTimeOffset now)
+    {
+        if (!CanDraftAnalysis)
+        {
+            throw new InvalidOperationException("The analysis can only be drafted after both inputs are uploaded and before it is approved.");
+        }
+
+        var previous = LatestArtifact(ArtifactStage.Analysis);
+        foreach (var pending in _artifacts.Where(a => a.Stage == ArtifactStage.Analysis))
+        {
+            pending.Supersede();
+        }
+
+        var draft = new ArtifactVersion
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = Id,
+            Stage = ArtifactStage.Analysis,
+            Version = (previous?.Version ?? 0) + 1,
+            Source = source,
+            ContentJson = contentJson,
+            NotesJson = notesJson,
+            Model = model,
+            PromptVersion = promptVersion,
+            Feedback = feedback,
+            BasedOnVersion = previous?.Version,
+            CreatedById = createdBy,
+            CreatedAtUtc = now,
+        };
+        _artifacts.Add(draft);
+        return draft;
+    }
+
+    /// <summary>Gate 1: approving the newest pending analysis moves the project on to architecture.</summary>
+    public GateOutcome ApproveAnalysis(int version, Guid reviewerId, string reviewerRole, string? comment, DateTimeOffset now)
+    {
+        var outcome = CheckAnalysisDecision(version, out var draft);
+        if (outcome != GateOutcome.Done)
+        {
+            return outcome;
+        }
+
+        draft!.Decide(ReviewDecisionKind.Approved, reviewerId, reviewerRole, comment, now);
+        Stage = ProjectStage.AnalysisApproved;
+        return GateOutcome.Done;
+    }
+
+    /// <summary>Gate 1: rejecting keeps the project where it is; the reviewer can ask for a redraft.</summary>
+    public GateOutcome RejectAnalysis(int version, Guid reviewerId, string reviewerRole, string comment, DateTimeOffset now)
+    {
+        var outcome = CheckAnalysisDecision(version, out var draft);
+        if (outcome != GateOutcome.Done)
+        {
+            return outcome;
+        }
+
+        draft!.Decide(ReviewDecisionKind.Rejected, reviewerId, reviewerRole, comment, now);
+        return GateOutcome.Done;
+    }
+
+    private GateOutcome CheckAnalysisDecision(int version, out ArtifactVersion? draft)
+    {
+        draft = _artifacts.Find(a => a.Stage == ArtifactStage.Analysis && a.Version == version);
+        if (draft is null)
+        {
+            return GateOutcome.NotFound;
+        }
+
+        if (!CanDraftAnalysis)
+        {
+            return GateOutcome.WrongStage;
+        }
+
+        if (LatestArtifact(ArtifactStage.Analysis)!.Version != version)
+        {
+            return GateOutcome.NotLatest;
+        }
+
+        return draft.Status == ArtifactStatus.PendingReview ? GateOutcome.Done : GateOutcome.NotPending;
+    }
+
     private void RefreshStage()
     {
+        // Past gate 1 the stage is decided by approvals, not by which files are present.
+        if (Stage >= ProjectStage.AnalysisApproved)
+        {
+            return;
+        }
+
         var hasBoth = LatestFile(FileKind.Requirements) is not null && LatestFile(FileKind.TeamTemplate) is not null;
         Stage = hasBoth ? ProjectStage.FilesUploaded : ProjectStage.Draft;
     }

@@ -1,3 +1,4 @@
+using AiSdlc.Application.Analysis;
 using AiSdlc.Application.Analysis.Agents;
 using AiSdlc.Application.Analysis.ApproveAnalysis;
 using AiSdlc.Application.Analysis.GenerateAnalysis;
@@ -53,6 +54,7 @@ public static class DependencyInjection
         services.AddScoped<GetTeamHandler>();
         services.AddScoped<SetSprintCadenceHandler>();
 
+        services.AddSingleton<AnalysisGenerationLock>();
         services.AddScoped<AnalysisSpecialist>();
         services.AddScoped<AnalysisCritic>();
         services.AddScoped<AnalysisOrchestrator>();

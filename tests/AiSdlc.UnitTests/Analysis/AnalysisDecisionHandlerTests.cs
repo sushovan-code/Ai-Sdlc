@@ -16,6 +16,7 @@ namespace AiSdlc.UnitTests.Analysis;
 public sealed class AnalysisDecisionHandlerTests
 {
     private readonly IAuditLog _audit = Substitute.For<IAuditLog>();
+    private readonly AnalysisGenerationLock _lock = new();
     private readonly Project _project = TestProjects.WithTeam();
     private readonly IProjectRepository _projects;
 
@@ -28,10 +29,10 @@ public sealed class AnalysisDecisionHandlerTests
     }
 
     private ApproveAnalysisHandler Approver(ICurrentUser caller) =>
-        new(new ApproveAnalysisValidator(), caller, _projects, _audit, new FixedTime(TestProjects.Now));
+        new(new ApproveAnalysisValidator(), caller, _projects, _lock, _audit, new FixedTime(TestProjects.Now));
 
     private RejectAnalysisHandler Rejecter(ICurrentUser caller) =>
-        new(new RejectAnalysisValidator(), caller, _projects, _audit, new FixedTime(TestProjects.Now));
+        new(new RejectAnalysisValidator(), caller, _projects, _lock, _audit, new FixedTime(TestProjects.Now));
 
     [Fact]
     public async Task Approve_ProjectManager_ApprovesSavesAndAudits()
@@ -83,6 +84,28 @@ public sealed class AnalysisDecisionHandlerTests
         var result = await Approver(TestUsers.Manager()).HandleAsync(new ApproveAnalysis(_project.Id, 1, comment), CancellationToken.None);
 
         result.Error.Type.ShouldBe(ErrorType.Validation);
+    }
+
+    [Fact]
+    public async Task Approve_WhileADraftIsBeingGenerated_IsAConflictAndNothingChanges()
+    {
+        using var running = _lock.TryEnter(_project.Id);
+
+        var result = await Approver(TestUsers.Manager()).HandleAsync(new ApproveAnalysis(_project.Id, 1, null), CancellationToken.None);
+
+        result.Error.Code.ShouldBe(AnalysisErrors.GenerationInProgressCode);
+        _project.Stage.ShouldBe(ProjectStage.FilesUploaded);
+    }
+
+    [Fact]
+    public async Task Reject_WhileADraftIsBeingGenerated_IsAConflictAndNothingChanges()
+    {
+        using var running = _lock.TryEnter(_project.Id);
+
+        var result = await Rejecter(TestUsers.Manager()).HandleAsync(new RejectAnalysis(_project.Id, 1, "No"), CancellationToken.None);
+
+        result.Error.Code.ShouldBe(AnalysisErrors.GenerationInProgressCode);
+        _project.Artifacts.Single().Status.ShouldBe(ArtifactStatus.PendingReview);
     }
 
     [Fact]

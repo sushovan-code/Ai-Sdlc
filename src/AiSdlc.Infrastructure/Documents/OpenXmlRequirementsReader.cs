@@ -40,8 +40,23 @@ internal sealed class OpenXmlRequirementsReader(ILogger<OpenXmlRequirementsReade
             return string.Empty;
         }
 
-        var lines = body.Descendants<Paragraph>().Select(p => p.InnerText.Trim()).Where(t => t.Length > 0);
-        return string.Join('\n', lines);
+        // Stop once the text is past what the analysis accepts, so a huge document cannot use unbounded memory.
+        var text = new StringBuilder();
+        foreach (var paragraph in body.Descendants<Paragraph>())
+        {
+            var line = paragraph.InnerText.Trim();
+            if (line.Length > 0)
+            {
+                text.Append(line).Append('\n');
+            }
+
+            if (text.Length > AiLimits.MaxSourceCharacters)
+            {
+                break;
+            }
+        }
+
+        return text.ToString();
     }
 
     private static Result<string> Fail(string message) =>

@@ -28,7 +28,9 @@ public sealed class AnalysisOrchestrator(
         var redacted = GovernanceGuard.Redact(requirementsText);
         var chunks = RequirementsChunker.Split(redacted.Text);
 
-        var drafted = await specialist.DraftAsync(chunks, previous, feedback, cancellationToken);
+        // Reviewer comments are free text too: mask sensitive data in them before they reach the model.
+        var safeFeedback = feedback is null ? null : GovernanceGuard.Redact(feedback).Text;
+        var drafted = await specialist.DraftAsync(chunks, previous, safeFeedback, cancellationToken);
         await AuditCallAsync(SpecialistAgent, drafted.IsSuccess, drafted.IsSuccess ? drafted.Value.Model : string.Empty, drafted.IsSuccess ? drafted.Value.TotalTokens : null, cancellationToken);
         if (drafted.IsFailure)
         {

@@ -24,6 +24,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:AllowEphemeralKey", "true");
         builder.UseSetting("RateLimiting:AuthPermitLimit", GenerousRateLimit);
         builder.UseSetting("RateLimiting:WritesPermitLimit", GenerousRateLimit);
+        builder.UseSetting("RateLimiting:AiPermitLimit", GenerousRateLimit);
     }
 
     protected override void Dispose(bool disposing)

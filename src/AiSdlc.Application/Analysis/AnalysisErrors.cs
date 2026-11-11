@@ -13,6 +13,7 @@ public static class AnalysisErrors
     public const string NotPendingCode = "analysis.not-pending";
     public const string AiUnavailableCode = "ai.unavailable";
     public const string AiInvalidOutputCode = "ai.invalid-output";
+    public const string GenerationInProgressCode = "analysis.generation-in-progress";
     public const string InputsLockedCode = "project.inputs-locked";
 
     public static Error AiUnavailable { get; } = new(
@@ -37,6 +38,11 @@ public static class AnalysisErrors
     public static Error InputsLocked { get; } = new(
         InputsLockedCode,
         "The requirements are locked because the analysis has been approved.",
+        ErrorType.Conflict);
+
+    public static Error GenerationInProgress { get; } = new(
+        GenerationInProgressCode,
+        "A draft is being generated for this project. Wait for it to finish, then try again.",
         ErrorType.Conflict);
 
     public static Error NotAvailable(string reason) => new(NotAvailableCode, reason, ErrorType.Conflict);

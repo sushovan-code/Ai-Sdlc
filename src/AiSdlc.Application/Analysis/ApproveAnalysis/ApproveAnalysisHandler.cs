@@ -12,6 +12,7 @@ public sealed class ApproveAnalysisHandler(
     IValidator<ApproveAnalysis> validator,
     ICurrentUser currentUser,
     IProjectRepository projects,
+    AnalysisGenerationLock generationLock,
     IAuditLog audit,
     TimeProvider time)
 {
@@ -30,6 +31,11 @@ public sealed class ApproveAnalysisHandler(
         }
 
         var project = opened.Value;
+        if (generationLock.IsRunning(project.Id))
+        {
+            return Result.Failure(AnalysisErrors.GenerationInProgress);
+        }
+
         var comment = string.IsNullOrWhiteSpace(command.Comment) ? null : command.Comment.Trim();
         var outcome = project.ApproveAnalysis(
             command.Version, currentUser.UserId!.Value, currentUser.Role!, comment, time.GetUtcNow());

@@ -22,7 +22,7 @@ public static class AnalysisEndpoints
 
         group.MapPost("/generate", GenerateAsync)
             .RequireAuthorization(AuthorizationPolicies.ProjectManagement)
-            .RequireRateLimiting(RateLimitPolicies.Writes)
+            .RequireRateLimiting(RateLimitPolicies.AiGeneration)
             .Produces<AnalysisVersionDto>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)

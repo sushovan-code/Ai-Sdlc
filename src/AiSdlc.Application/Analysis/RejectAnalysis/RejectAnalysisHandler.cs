@@ -12,6 +12,7 @@ public sealed class RejectAnalysisHandler(
     IValidator<RejectAnalysis> validator,
     ICurrentUser currentUser,
     IProjectRepository projects,
+    AnalysisGenerationLock generationLock,
     IAuditLog audit,
     TimeProvider time)
 {
@@ -30,6 +31,11 @@ public sealed class RejectAnalysisHandler(
         }
 
         var project = opened.Value;
+        if (generationLock.IsRunning(project.Id))
+        {
+            return Result.Failure(AnalysisErrors.GenerationInProgress);
+        }
+
         var outcome = project.RejectAnalysis(
             command.Version, currentUser.UserId!.Value, currentUser.Role!, command.Comment.Trim(), time.GetUtcNow());
         if (outcome != GateOutcome.Done)

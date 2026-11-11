@@ -22,6 +22,7 @@ public sealed class GenerateAnalysisHandler(
     IFileStorage storage,
     IRequirementsReader reader,
     AnalysisOrchestrator orchestrator,
+    AnalysisGenerationLock generationLock,
     IAuditLog audit,
     TimeProvider time)
 {
@@ -43,6 +44,12 @@ public sealed class GenerateAnalysisHandler(
         if (!project.CanDraftAnalysis)
         {
             return Result<AnalysisVersionDto>.Failure(AnalysisErrors.NotAvailable(BlockedReason(project)));
+        }
+
+        using var slot = generationLock.TryEnter(project.Id);
+        if (slot is null)
+        {
+            return Result<AnalysisVersionDto>.Failure(AnalysisErrors.GenerationInProgress);
         }
 
         var text = await ReadRequirementsAsync(project, cancellationToken);

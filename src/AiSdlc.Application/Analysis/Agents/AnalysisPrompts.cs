@@ -51,13 +51,13 @@ public static class AnalysisPrompts
         if (!string.IsNullOrWhiteSpace(previousDraftJson))
         {
             prompt.AppendLine().AppendLine("This is the previous draft that the reviewer wants improved:");
-            prompt.AppendLine("<previous_draft>").AppendLine(previousDraftJson).AppendLine("</previous_draft>");
+            prompt.AppendLine("<previous_draft>").AppendLine(Neutralize(previousDraftJson)).AppendLine("</previous_draft>");
         }
 
         if (!string.IsNullOrWhiteSpace(feedback))
         {
             prompt.AppendLine().AppendLine("The reviewer gave this feedback. Address it while still following the output format and rules:");
-            prompt.AppendLine("<reviewer_feedback>").AppendLine(feedback.Trim()).AppendLine("</reviewer_feedback>");
+            prompt.AppendLine("<reviewer_feedback>").AppendLine(Neutralize(feedback.Trim())).AppendLine("</reviewer_feedback>");
         }
 
         prompt.AppendLine().Append("Return the JSON analysis now.");
@@ -65,17 +65,24 @@ public static class AnalysisPrompts
     }
 
     public static string CriticUser(IReadOnlyList<SourceChunk> chunks, string draftJson) =>
-        $"{Document(chunks)}\n\n<draft>\n{draftJson}\n</draft>\n\nReturn the JSON notes now.";
+        $"{Document(chunks)}\n\n<draft>\n{Neutralize(draftJson)}\n</draft>\n\nReturn the JSON notes now.";
 
     public static string RetryUser(string problem) =>
         $"Your previous answer could not be used: {problem}\nReturn ONLY the corrected JSON object, with no extra text.";
+
+    /// <summary>
+    /// Document, draft and feedback text is placed between tags. Angle brackets inside it are swapped for look-alikes
+    /// so the text cannot close a tag and pose as instructions.
+    /// </summary>
+    private static string Neutralize(string text) =>
+        text.Replace('<', '‹').Replace('>', '›');
 
     private static string Document(IReadOnlyList<SourceChunk> chunks)
     {
         var text = new StringBuilder("<document>\n");
         foreach (var chunk in chunks)
         {
-            text.Append('[').Append(chunk.Id).Append("] ").AppendLine(chunk.Text);
+            text.Append('[').Append(chunk.Id).Append("] ").AppendLine(Neutralize(chunk.Text));
         }
 
         return text.Append("</document>").ToString();

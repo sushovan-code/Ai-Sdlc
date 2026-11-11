@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { AppRole } from '../../../core/auth/roles';
+import { makeOverview } from '../../../testing/analysis-fixtures';
 import { host, textOf } from '../../../testing/dom';
 import { makeToken, makeUser, seedSession } from '../../../testing/fixtures';
 import {
@@ -39,6 +40,12 @@ describe('ProjectWorkspacePage step navigation', () => {
       ...project,
       files: project.files.map(onTheWire),
     });
+    await fixture.whenStable();
+  }
+
+  /** The analysis page loads its own data when the stage opens; answer it so the page can render. */
+  async function answerAnalysis(): Promise<void> {
+    http.expectOne({ method: 'GET', url: `${PROJECT_URL}/analysis` }).flush(makeOverview());
     await fixture.whenStable();
   }
 
@@ -102,10 +109,11 @@ describe('ProjectWorkspacePage step navigation', () => {
 
     button('Next').click();
     await fixture.whenStable();
+    await answerAnalysis();
 
     const text = textOf(host(fixture));
-    expect(text).toContain('requirements into functional and non-functional requirements');
-    expect(text).toContain('Gate 1: Requirements analysis review by the Project Manager');
+    expect(text).toContain('AI reads the requirements and drafts what the system must do');
+    expect(text).toContain('Generate with AI');
     expect(text).not.toContain('Project files');
   });
 
@@ -113,6 +121,7 @@ describe('ProjectWorkspacePage step navigation', () => {
     await render(filesUploaded());
     button('Next').click();
     await fixture.whenStable();
+    await answerAnalysis();
 
     expect(button('Next').disabled).toBe(true);
     expect(textOf(host(fixture))).toContain(
@@ -124,6 +133,7 @@ describe('ProjectWorkspacePage step navigation', () => {
     await render(filesUploaded());
     button('Next').click();
     await fixture.whenStable();
+    await answerAnalysis();
 
     button('Previous').click();
     await fixture.whenStable();
@@ -140,6 +150,7 @@ describe('ProjectWorkspacePage step navigation', () => {
     expect(stepButton('Analysis').disabled).toBe(false);
     stepButton('Analysis').click();
     await fixture.whenStable();
+    await answerAnalysis();
 
     expect(textOf(host(fixture))).toContain('Gate 1');
     expect(host(fixture).querySelector('aisdlc-stepper li.selected')?.textContent).toContain(

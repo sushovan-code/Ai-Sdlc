@@ -3,6 +3,9 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 const ICON_PATHS = {
   sparkles:
     'M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8L12 3z M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z',
+  // Stand-in until the official GitHub Copilot mark is supplied: swap this one path and every AI button follows.
+  copilot:
+    'M5 10a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v5a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z M9 11v2 M15 11v2 M12 3v3',
   mail: 'M3 6h18v12H3z M3 7l9 6 9-6',
   lock: 'M5 11h14v9H5z M8 11V8a4 4 0 0 1 8 0v3',
   user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1',

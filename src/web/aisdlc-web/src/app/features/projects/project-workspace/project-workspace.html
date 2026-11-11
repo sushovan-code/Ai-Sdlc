@@ -58,6 +58,14 @@
         (remove)="removeMember($event)"
       />
     </section>
+  } @else if (selectedStep().key === 'analysis') {
+    <section class="card panel" aria-label="Requirements analysis">
+      <aisdlc-analysis-panel
+        [projectId]="current.id"
+        [canManage]="current.canManage"
+        (approved)="analysisApproved()"
+      />
+    </section>
   } @else {
     <section class="card">
       <aisdlc-stage-panel [step]="selectedStep()" />

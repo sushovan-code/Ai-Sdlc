@@ -27,6 +27,7 @@ import { roleLabel } from '../../../core/auth/roles';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { Icon } from '../../../shared/ui/icon/icon';
 import { Stepper } from '../../../shared/ui/stepper/stepper';
+import { AnalysisPanel } from '../analysis-panel/analysis-panel';
 import { ProjectFiles, UploadRequest } from '../project-files/project-files';
 import { ProjectTeam } from '../project-team/project-team';
 import { StagePanel } from '../stage-panel/stage-panel';
@@ -37,7 +38,16 @@ import { WORKFLOW, blockReason, furthestStep, stepsFor } from '../workflow';
 /** One project: where it is in the lifecycle, the stage being viewed, its input files and who is on it. */
 @Component({
   selector: 'aisdlc-project-workspace',
-  imports: [RouterLink, Icon, Stepper, ProjectFiles, ProjectTeam, StagePanel, TeamCapacity],
+  imports: [
+    RouterLink,
+    Icon,
+    Stepper,
+    AnalysisPanel,
+    ProjectFiles,
+    ProjectTeam,
+    StagePanel,
+    TeamCapacity,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-workspace.html',
   styleUrl: './project-workspace.scss',
@@ -77,6 +87,11 @@ export class ProjectWorkspacePage implements OnInit {
   protected readonly myRole = computed(() => roleLabel(this.auth.role() ?? ''));
 
   ngOnInit(): void {
+    this.reload();
+  }
+
+  /** Gate 1 passed: reload so the stage, the stepper and the locked requirements follow. */
+  protected analysisApproved(): void {
     this.reload();
   }
 

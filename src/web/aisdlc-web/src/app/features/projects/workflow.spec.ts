@@ -24,6 +24,18 @@ describe('workflow', () => {
     expect(furthestStep('Draft')).toBe(0);
   });
 
+  it('lets a project whose analysis is approved reach the architecture stage', () => {
+    expect(furthestStep('AnalysisApproved')).toBe(2);
+    expect(blockReason('AnalysisApproved', 1)).toBeNull();
+    expect(stepsFor('AnalysisApproved').map((s) => s.state)).toEqual([
+      'done',
+      'done',
+      'current',
+      'upcoming',
+      'upcoming',
+    ]);
+  });
+
   it('lets a project with both files reach the analysis stage', () => {
     expect(furthestStep('FilesUploaded')).toBe(1);
   });

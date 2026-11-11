@@ -62,7 +62,7 @@ public sealed class GenerateAnalysisHandler(
         var previous = latest is null ? null : AnalysisJson.Deserialize<AnalysisContent>(latest.ContentJson);
         var feedback = string.IsNullOrWhiteSpace(command.Feedback) ? null : command.Feedback.Trim();
 
-        var run = await orchestrator.RunAsync(text.Value, previous, feedback, cancellationToken);
+        var run = await orchestrator.RunAsync(project.Id, text.Value, previous, feedback, cancellationToken);
         if (run.IsFailure)
         {
             return Result<AnalysisVersionDto>.Failure(run.Error);

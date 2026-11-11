@@ -40,6 +40,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUserAccounts, IdentityUserAccounts>();
         services.AddScoped<IAuditLog, AuditLog>();
+        services.AddScoped<IAuditQuery, AuditQuery>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
         services.AddSingleton<ITeamSheetReader, ClosedXmlTeamSheetReader>();
         services.AddSingleton<IRequirementsReader, OpenXmlRequirementsReader>();

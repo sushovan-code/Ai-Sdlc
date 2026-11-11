@@ -27,6 +27,9 @@ using AiSdlc.Application.UserDirectory.SearchUsers;
 using AiSdlc.Application.Users.ListUsers;
 using AiSdlc.Application.Users.SetUserActive;
 using AiSdlc.Application.Users.SetUserRole;
+using AiSdlc.Application.Wrapup.GetAudit;
+using AiSdlc.Application.Wrapup.GetReport;
+using AiSdlc.Application.Wrapup.GetTraceability;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -68,6 +71,9 @@ public static class DependencyInjection
         services.AddScoped<ApproveAnalysisHandler>();
         services.AddScoped<RejectAnalysisHandler>();
 
+        services.AddScoped<GetTraceabilityHandler>();
+        services.AddScoped<GetAuditHandler>();
+        services.AddScoped<GetReportHandler>();
         services.AddScoped<StageGenerator>();
         services.AddScoped<GenerateStageHandler>();
         services.AddScoped<GetStageHandler>();

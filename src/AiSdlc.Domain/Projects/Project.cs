@@ -198,11 +198,15 @@ public sealed class Project
     public ArtifactVersion? LatestArtifact(ArtifactStage stage) =>
         _artifacts.Where(a => a.Stage == stage).OrderByDescending(a => a.Version).FirstOrDefault();
 
-    /// <summary>Analysis can be drafted (or redrafted) once both inputs are in and until gate 1 is passed.</summary>
-    public bool CanDraftAnalysis => Stage == ProjectStage.FilesUploaded;
+    /// <summary>A stage can be drafted (or redrafted) only while the project is at the stage just before its gate.</summary>
+    public bool CanDraft(ArtifactStage stage) => Stage == StageRules.RequiredProjectStage(stage);
 
-    /// <summary>Adds a new draft of the analysis; any draft still waiting for review is superseded.</summary>
-    public ArtifactVersion AddAnalysisDraft(
+    /// <summary>Analysis can be drafted (or redrafted) once both inputs are in and until gate 1 is passed.</summary>
+    public bool CanDraftAnalysis => CanDraft(ArtifactStage.Analysis);
+
+    /// <summary>Adds a new version of a stage's output; any draft still waiting for review is superseded.</summary>
+    public ArtifactVersion AddDraft(
+        ArtifactStage stage,
         string contentJson,
         string? notesJson,
         ArtifactSource source,
@@ -212,13 +216,13 @@ public sealed class Project
         Guid createdBy,
         DateTimeOffset now)
     {
-        if (!CanDraftAnalysis)
+        if (!CanDraft(stage))
         {
-            throw new InvalidOperationException("The analysis can only be drafted after both inputs are uploaded and before it is approved.");
+            throw new InvalidOperationException($"The {stage} stage cannot be drafted at this point in the project.");
         }
 
-        var previous = LatestArtifact(ArtifactStage.Analysis);
-        foreach (var pending in _artifacts.Where(a => a.Stage == ArtifactStage.Analysis))
+        var previous = LatestArtifact(stage);
+        foreach (var pending in _artifacts.Where(a => a.Stage == stage))
         {
             pending.Supersede();
         }
@@ -227,7 +231,7 @@ public sealed class Project
         {
             Id = Guid.NewGuid(),
             ProjectId = Id,
-            Stage = ArtifactStage.Analysis,
+            Stage = stage,
             Version = (previous?.Version ?? 0) + 1,
             Source = source,
             ContentJson = contentJson,
@@ -243,24 +247,36 @@ public sealed class Project
         return draft;
     }
 
-    /// <summary>Gate 1: approving the newest pending analysis moves the project on to architecture.</summary>
-    public GateOutcome ApproveAnalysis(int version, Guid reviewerId, string reviewerRole, string? comment, DateTimeOffset now)
+    /// <summary>Adds a new draft of the analysis.</summary>
+    public ArtifactVersion AddAnalysisDraft(
+        string contentJson,
+        string? notesJson,
+        ArtifactSource source,
+        string model,
+        string promptVersion,
+        string? feedback,
+        Guid createdBy,
+        DateTimeOffset now) =>
+        AddDraft(ArtifactStage.Analysis, contentJson, notesJson, source, model, promptVersion, feedback, createdBy, now);
+
+    /// <summary>Approving the newest pending version moves the project past that stage's gate.</summary>
+    public GateOutcome Approve(ArtifactStage stage, int version, Guid reviewerId, string reviewerRole, string? comment, DateTimeOffset now)
     {
-        var outcome = CheckAnalysisDecision(version, out var draft);
+        var outcome = CheckDecision(stage, version, out var draft);
         if (outcome != GateOutcome.Done)
         {
             return outcome;
         }
 
         draft!.Decide(ReviewDecisionKind.Approved, reviewerId, reviewerRole, comment, now);
-        Stage = ProjectStage.AnalysisApproved;
+        Stage = StageRules.ApprovedProjectStage(stage);
         return GateOutcome.Done;
     }
 
-    /// <summary>Gate 1: rejecting keeps the project where it is; the reviewer can ask for a redraft.</summary>
-    public GateOutcome RejectAnalysis(int version, Guid reviewerId, string reviewerRole, string comment, DateTimeOffset now)
+    /// <summary>Rejecting keeps the project where it is; the reviewer can ask for a redraft.</summary>
+    public GateOutcome Reject(ArtifactStage stage, int version, Guid reviewerId, string reviewerRole, string comment, DateTimeOffset now)
     {
-        var outcome = CheckAnalysisDecision(version, out var draft);
+        var outcome = CheckDecision(stage, version, out var draft);
         if (outcome != GateOutcome.Done)
         {
             return outcome;
@@ -270,20 +286,28 @@ public sealed class Project
         return GateOutcome.Done;
     }
 
-    private GateOutcome CheckAnalysisDecision(int version, out ArtifactVersion? draft)
+    /// <summary>Gate 1: approving the newest pending analysis moves the project on to architecture.</summary>
+    public GateOutcome ApproveAnalysis(int version, Guid reviewerId, string reviewerRole, string? comment, DateTimeOffset now) =>
+        Approve(ArtifactStage.Analysis, version, reviewerId, reviewerRole, comment, now);
+
+    /// <summary>Gate 1: rejecting keeps the project where it is; the reviewer can ask for a redraft.</summary>
+    public GateOutcome RejectAnalysis(int version, Guid reviewerId, string reviewerRole, string comment, DateTimeOffset now) =>
+        Reject(ArtifactStage.Analysis, version, reviewerId, reviewerRole, comment, now);
+
+    private GateOutcome CheckDecision(ArtifactStage stage, int version, out ArtifactVersion? draft)
     {
-        draft = _artifacts.Find(a => a.Stage == ArtifactStage.Analysis && a.Version == version);
+        draft = _artifacts.Find(a => a.Stage == stage && a.Version == version);
         if (draft is null)
         {
             return GateOutcome.NotFound;
         }
 
-        if (!CanDraftAnalysis)
+        if (!CanDraft(stage))
         {
             return GateOutcome.WrongStage;
         }
 
-        if (LatestArtifact(ArtifactStage.Analysis)!.Version != version)
+        if (LatestArtifact(stage)!.Version != version)
         {
             return GateOutcome.NotLatest;
         }

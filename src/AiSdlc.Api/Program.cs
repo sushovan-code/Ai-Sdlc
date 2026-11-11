@@ -60,6 +60,7 @@ v1.MapProjectEndpoints();
 v1.MapProjectFileEndpoints();
 v1.MapTeamEndpoints();
 v1.MapAnalysisEndpoints();
+v1.MapStageEndpoints();
 v1.MapDirectoryEndpoints();
 
 app.Run();

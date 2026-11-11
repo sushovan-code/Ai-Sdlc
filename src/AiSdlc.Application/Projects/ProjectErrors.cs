@@ -18,6 +18,10 @@ public static class ProjectErrors
     public static Error ManagerRequired { get; } =
         new(ManagerRequiredCode, "Only a Project Manager can do this.", ErrorType.Forbidden);
 
+    /// <summary>For the stages reviewed by someone other than the Project Manager.</summary>
+    public static Error RoleRequired(string roleLabel) =>
+        new(ManagerRequiredCode, $"Only the {roleLabel} can do this.", ErrorType.Forbidden);
+
     public static Error AlreadyMember { get; } =
         new(AlreadyMemberCode, "That user is already on the project.", ErrorType.Conflict);
 

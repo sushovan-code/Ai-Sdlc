@@ -11,4 +11,13 @@ public enum ProjectStage
 
     /// <summary>Gate 1 is passed: the requirements analysis was approved, so architecture can begin.</summary>
     AnalysisApproved,
+
+    /// <summary>Gate 2 is passed: the architecture plan was approved, so tasks can be generated.</summary>
+    ArchitectureApproved,
+
+    /// <summary>Gate 3 is passed: tasks and assignments were approved, so test cases can be generated.</summary>
+    TasksApproved,
+
+    /// <summary>Gate 4 is passed: the test cases were approved. The lifecycle is complete.</summary>
+    TestCasesApproved,
 }

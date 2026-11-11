@@ -24,3 +24,6 @@ Gate 1 needs an AI draft of the requirements analysis that a Project Manager can
 - The text sent to the model is capped (60,000 characters, about 6,000 output tokens). Longer documents are refused with a clear message; chunked multi-pass analysis is a possible extension.
 - Drafts store JSON, so changing the content shape later needs a version field or a migration of stored drafts.
 - Later gates (architecture, tasks, test cases) reuse `ArtifactVersion` and the same agent shape with a new `ArtifactStage` and prompts.
+- The injection check in the governance guard is a heuristic hint, not a control. The real defences are that document text is data inside neutralised tags, the model has no tools, output is schema-validated, and a person approves at the gate.
+- One generation runs per project at a time, and a decision is refused while one runs (`AnalysisGenerationLock`). It is in-process, which fits the single-instance app; several instances would need a shared lock or a database concurrency token.
+- Generation has its own rate limit (default 5 per minute per user) because each call costs money.

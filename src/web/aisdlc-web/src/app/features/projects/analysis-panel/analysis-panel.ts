@@ -4,11 +4,14 @@ import {
   Component,
   DestroyRef,
   OnInit,
+  ElementRef,
   computed,
+  effect,
   inject,
   input,
   output,
   signal,
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { Observable } from 'rxjs';
@@ -18,6 +21,13 @@ import { problemMessage } from '../../../core/api/problem';
 import { roleLabel } from '../../../core/auth/roles';
 import { ToastService } from '../../../core/notifications/toast.service';
 import { Icon } from '../../../shared/ui/icon/icon';
+
+const STATUS_LABELS: Record<string, string> = {
+  PendingReview: 'Waiting for review',
+  Approved: 'Approved',
+  Rejected: 'Rejected',
+  Superseded: 'Replaced by a newer version',
+};
 
 type Action = 'generate' | 'approve' | 'reject';
 
@@ -44,6 +54,8 @@ export class AnalysisPanel implements OnInit {
   protected readonly overview = signal<AnalysisOverview | null>(null);
   protected readonly busy = signal<Action | null>(null);
   protected readonly comment = signal('');
+  protected readonly loadFailed = signal(false);
+  private readonly approvedBanner = viewChild<ElementRef<HTMLElement>>('approvedBanner');
 
   protected readonly latest = computed(() => this.overview()?.versions[0] ?? null);
   protected readonly isPending = computed(() => this.latest()?.status === 'PendingReview');
@@ -57,8 +69,17 @@ export class AnalysisPanel implements OnInit {
   );
   protected readonly roleLabel = roleLabel;
 
+  constructor() {
+    // After approving, the button the user pressed disappears; move focus to the confirmation instead of losing it.
+    effect(() => this.approvedBanner()?.nativeElement.focus());
+  }
+
   ngOnInit(): void {
     this.load();
+  }
+
+  protected statusLabel(status: string): string {
+    return STATUS_LABELS[status] ?? status;
   }
 
   protected typeComment(event: Event): void {
@@ -124,13 +145,17 @@ export class AnalysisPanel implements OnInit {
     });
   }
 
-  private load(): void {
+  protected load(): void {
+    this.loadFailed.set(false);
     this.api
       .get(this.projectId())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (overview) => this.overview.set(overview),
-        error: (error: unknown) => this.toast.error(problemMessage(error)),
+        error: (error: unknown) => {
+          this.loadFailed.set(true);
+          this.toast.error(problemMessage(error));
+        },
       });
   }
 }

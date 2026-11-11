@@ -15,10 +15,14 @@
         [class.pill-danger]="current.status === 'Rejected'"
       >
         Version {{ current.version }} ·
-        {{ current.status === 'PendingReview' ? 'Waiting for review' : current.status }}
+        {{ statusLabel(current.status) }}
       </span>
     }
   </header>
+
+  <p class="note" role="status" aria-live="polite">
+    {{ busy() === 'generate' ? 'The AI is drafting. This can take a minute.' : '' }}
+  </p>
 
   @if (!latest()) {
     <div class="empty">
@@ -43,7 +47,7 @@
     @let current = latest()!;
 
     @if (isApproved()) {
-      <p class="banner ok" role="status">
+      <p #approvedBanner class="banner ok" role="status" tabindex="-1">
         <aisdlc-icon name="check-circle" [size]="18" />
         Approved by the {{ roleLabel(approval()?.reviewerRole ?? '') }} on
         {{ approval()?.decidedAtUtc | date: 'medium' }}. The requirements are now locked.
@@ -195,7 +199,7 @@
           </label>
           <textarea
             id="analysis-comment"
-            class="input"
+            class="input plain"
             rows="3"
             maxlength="2000"
             [value]="comment()"
@@ -225,9 +229,6 @@
               </button>
             }
           </div>
-          @if (busy() === 'generate') {
-            <p class="note" role="status">The AI is drafting. This can take a minute.</p>
-          }
         </div>
       }
     } @else if (!isApproved()) {
@@ -240,13 +241,13 @@
         <ul class="plain">
           @for (old of olderVersions(); track old.version) {
             <li>
-              Version {{ old.version }} · {{ old.status }} ·
+              Version {{ old.version }} · {{ statusLabel(old.status) }} ·
               {{ old.createdAtUtc | date: 'medium' }}
               @if (old.feedback) {
                 · feedback: “{{ old.feedback }}”
               }
               @for (decision of old.decisions; track decision.decidedAtUtc) {
-                · {{ decision.kind }} by {{ roleLabel(decision.reviewerRole) }}
+                · {{ statusLabel(decision.kind) }} by {{ roleLabel(decision.reviewerRole) }}
                 @if (decision.comment) {
                   (“{{ decision.comment }}”)
                 }
@@ -257,6 +258,11 @@
       </details>
     }
   }
+} @else if (loadFailed()) {
+  <p class="alert alert-error" role="alert">
+    Could not load the analysis.
+    <button type="button" class="btn btn-sm" (click)="load()">Try again</button>
+  </p>
 } @else {
   <p class="loading">Loading analysis…</p>
 }

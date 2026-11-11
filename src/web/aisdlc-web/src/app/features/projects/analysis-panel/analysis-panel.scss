@@ -88,6 +88,13 @@ ul {
   display: grid;
   flex: 1;
   gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.review textarea {
+  padding-block: 10px;
+  resize: vertical;
 }
 
 .id,

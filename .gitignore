@@ -1,0 +1,33 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+TestResults/
+coverage/
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# Secrets and local data (never commit)
+.env*
+secrets.json
+appsettings.*.local.json
+*.db
+*.db-shm
+*.db-wal
+App_Data/
+
+# Design reference screenshots (contain personal browser content); kept locally only
+reference/
+
+# Stray nested clone folder
+Ai-Sdlc/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/

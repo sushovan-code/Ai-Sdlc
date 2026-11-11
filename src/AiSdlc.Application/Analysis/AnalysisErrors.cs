@@ -1,4 +1,5 @@
 using AiSdlc.Application.Common;
+using AiSdlc.Domain.Artifacts;
 
 namespace AiSdlc.Application.Analysis;
 
@@ -39,4 +40,18 @@ public static class AnalysisErrors
         ErrorType.Conflict);
 
     public static Error NotAvailable(string reason) => new(NotAvailableCode, reason, ErrorType.Conflict);
+
+    public static Error RequirementsTooLong { get; } = new(
+        TooLongCode,
+        $"The requirements are longer than {AiLimits.MaxSourceCharacters:N0} characters, which is the most that is analysed in one pass. Shorten the document and upload it again.",
+        ErrorType.Validation);
+
+    /// <summary>Maps a failed gate decision from the domain to the error the caller sees.</summary>
+    public static Error FromOutcome(GateOutcome outcome) => outcome switch
+    {
+        GateOutcome.NotFound => VersionNotFound,
+        GateOutcome.NotLatest => NotLatest,
+        GateOutcome.NotPending => NotPending,
+        _ => NotAvailable("The analysis can only be decided after both files are uploaded and before it is approved."),
+    };
 }

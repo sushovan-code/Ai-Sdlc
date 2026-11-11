@@ -1,3 +1,8 @@
+using AiSdlc.Application.Analysis.Agents;
+using AiSdlc.Application.Analysis.ApproveAnalysis;
+using AiSdlc.Application.Analysis.GenerateAnalysis;
+using AiSdlc.Application.Analysis.GetAnalysis;
+using AiSdlc.Application.Analysis.RejectAnalysis;
 using AiSdlc.Application.Auth.ChangePassword;
 using AiSdlc.Application.Auth.GetCurrentUser;
 using AiSdlc.Application.Auth.Login;
@@ -47,6 +52,14 @@ public static class DependencyInjection
         services.AddScoped<SearchUsersHandler>();
         services.AddScoped<GetTeamHandler>();
         services.AddScoped<SetSprintCadenceHandler>();
+
+        services.AddScoped<AnalysisSpecialist>();
+        services.AddScoped<AnalysisCritic>();
+        services.AddScoped<AnalysisOrchestrator>();
+        services.AddScoped<GenerateAnalysisHandler>();
+        services.AddScoped<GetAnalysisHandler>();
+        services.AddScoped<ApproveAnalysisHandler>();
+        services.AddScoped<RejectAnalysisHandler>();
 
         return services;
     }

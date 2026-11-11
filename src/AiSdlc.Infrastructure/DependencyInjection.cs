@@ -4,8 +4,10 @@ using AiSdlc.Application.Auth;
 using AiSdlc.Infrastructure.Auditing;
 using AiSdlc.Infrastructure.Identity;
 using AiSdlc.Infrastructure.Persistence;
+using AiSdlc.Infrastructure.Projects;
 using AiSdlc.Infrastructure.Security;
 using AiSdlc.Infrastructure.Seeding;
+using AiSdlc.Infrastructure.Storage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -33,6 +35,13 @@ public static class DependencyInjection
 
         services.AddScoped<IUserAccounts, IdentityUserAccounts>();
         services.AddScoped<IAuditLog, AuditLog>();
+        services.AddScoped<IProjectRepository, ProjectRepository>();
+
+        services.AddOptions<StorageOptions>()
+            .Bind(configuration.GetSection(StorageOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddSingleton<IFileStorage, LocalFileStorage>();
 
         services.AddOptions<SeedOptions>().Bind(configuration.GetSection(SeedOptions.SectionName));
         services.AddHostedService<DatabaseInitializer>();

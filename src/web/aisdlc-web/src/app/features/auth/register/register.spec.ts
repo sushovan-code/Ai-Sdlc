@@ -1,3 +1,4 @@
+import { toastMessages } from '../../../testing/toasts';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -103,8 +104,6 @@ describe('RegisterPage', () => {
       );
     await fixture.whenStable();
 
-    expect(host(fixture).querySelector('[role="alert"]')?.textContent).toContain(
-      'An account with this email already exists.',
-    );
+    expect(toastMessages().join(' ')).toContain('An account with this email already exists.');
   });
 });

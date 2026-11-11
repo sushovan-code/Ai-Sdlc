@@ -1,0 +1,56 @@
+.drop {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 24px 16px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  text-align: center;
+  transition:
+    border-color var(--motion),
+    background var(--motion);
+}
+
+.drop.dragging {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.drop.disabled {
+  opacity: 0.7;
+}
+
+.drop:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.hint,
+.note {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.browse {
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.problem {
+  color: var(--danger);
+  font-size: 13px;
+}

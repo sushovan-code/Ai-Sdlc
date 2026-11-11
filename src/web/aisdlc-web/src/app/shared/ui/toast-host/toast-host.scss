@@ -1,0 +1,140 @@
+.host {
+  position: fixed;
+  top: 72px;
+  right: 16px;
+  z-index: 1000;
+  display: grid;
+  gap: 8px;
+  width: min(400px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 12px 14px 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--info);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  pointer-events: auto;
+  animation: slide-in 180ms ease-out;
+}
+
+.toast.success {
+  border-left-color: var(--success);
+}
+
+.toast.success aisdlc-icon:first-child {
+  color: var(--success);
+}
+
+.toast.info aisdlc-icon:first-child {
+  color: var(--info);
+}
+
+.toast.warning {
+  border-left-color: var(--warning);
+}
+
+.toast.warning aisdlc-icon:first-child {
+  color: var(--warning);
+}
+
+.toast.error {
+  border-left-color: var(--danger);
+}
+
+.toast.error aisdlc-icon:first-child {
+  color: var(--danger);
+}
+
+.message {
+  flex: 1;
+  padding-top: 1px;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.close {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.bar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  transform-origin: left;
+  background: currentcolor;
+  opacity: 0.35;
+  animation: shrink linear forwards;
+}
+
+.success .bar {
+  color: var(--success);
+}
+
+.info .bar {
+  color: var(--info);
+}
+
+.warning .bar {
+  color: var(--warning);
+}
+
+.toast:hover .bar,
+.toast:focus-within .bar {
+  animation-play-state: paused;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shrink {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .host {
+    top: auto;
+    right: 16px;
+    bottom: 16px;
+    left: 16px;
+    width: auto;
+  }
+}

@@ -10,19 +10,20 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     private const string DevelopmentEnvironment = "Development";
     private const string GenerousRateLimit = "10000";
 
-    private readonly string _databasePath =
-        Path.Combine(Path.GetTempPath(), $"aisdlc-tests-{Guid.NewGuid():N}.db");
+    private readonly string _workFolder = Path.Combine(Path.GetTempPath(), $"aisdlc-tests-{Guid.NewGuid():N}");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment(DevelopmentEnvironment);
 
         // UseSetting is visible to Program.cs while it composes services, unlike late configuration sources.
-        builder.UseSetting("ConnectionStrings:Default", $"Data Source={_databasePath}");
+        builder.UseSetting("ConnectionStrings:Default", $"Data Source={Path.Combine(_workFolder, "test.db")}");
+        builder.UseSetting("Storage:RootPath", Path.Combine(_workFolder, "files"));
         builder.UseSetting("Seed:DemoUsersEnabled", "true");
         builder.UseSetting("Seed:DemoPassword", TestUsers.Password);
         builder.UseSetting("Jwt:AllowEphemeralKey", "true");
         builder.UseSetting("RateLimiting:AuthPermitLimit", GenerousRateLimit);
+        builder.UseSetting("RateLimiting:WritesPermitLimit", GenerousRateLimit);
     }
 
     protected override void Dispose(bool disposing)
@@ -34,6 +35,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         }
 
         SqliteConnection.ClearAllPools();
-        File.Delete(_databasePath);
+        if (Directory.Exists(_workFolder))
+        {
+            Directory.Delete(_workFolder, recursive: true);
+        }
     }
 }

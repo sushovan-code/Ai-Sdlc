@@ -1,67 +1,108 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import type { ProjectSummary } from '../../core/api/api-types';
+import { fieldErrors, problemMessage } from '../../core/api/problem';
+import { ProjectsApi } from '../../core/api/projects-api';
 import { AuthService } from '../../core/auth/auth.service';
+import { AppRole } from '../../core/auth/roles';
+import { ToastService } from '../../core/notifications/toast.service';
 import { Icon } from '../../shared/ui/icon/icon';
+import { STAGE_LABELS, stagePillClass } from './stage-labels';
 
-/** Landing page after sign-in. The project list and creation form arrive with the next slice. */
+const MIN_NAME_LENGTH = 3;
+const MAX_NAME_LENGTH = 100;
+const MAX_DESCRIPTION_LENGTH = 500;
+
+/** The projects the signed-in user belongs to, plus a create form for Project Managers. */
 @Component({
   selector: 'aisdlc-projects',
-  imports: [Icon],
+  imports: [DatePipe, ReactiveFormsModule, RouterLink, Icon],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    <header>
-      <h1>Projects</h1>
-      <p class="sub">
-        Each project moves from requirements to approved test cases through four review gates.
-      </p>
-    </header>
-    <section class="card empty" aria-labelledby="empty-title">
-      <span class="icon"><aisdlc-icon name="folder" [size]="28" /></span>
-      <h2 id="empty-title">Welcome, {{ firstName() }}</h2>
-      <p>No projects yet. Project creation, file upload and the review gates are coming next.</p>
-    </section>
-  `,
-  styles: `
-    header {
-      margin-bottom: 24px;
-    }
-
-    h1 {
-      font-size: 32px;
-      letter-spacing: -0.02em;
-    }
-
-    .sub {
-      color: var(--text-muted);
-    }
-
-    .empty {
-      display: grid;
-      justify-items: center;
-      gap: 8px;
-      padding: 56px 24px;
-      text-align: center;
-    }
-
-    .icon {
-      display: grid;
-      place-items: center;
-      width: 56px;
-      height: 56px;
-      border-radius: 16px;
-      background: var(--accent-soft);
-      color: var(--accent);
-    }
-
-    .empty p {
-      max-width: 420px;
-      color: var(--text-muted);
-    }
-  `,
+  templateUrl: './projects.html',
+  styleUrl: './projects.scss',
 })
-export class ProjectsPage {
-  private readonly auth = inject(AuthService);
+export class ProjectsPage implements OnInit {
+  private readonly api = inject(ProjectsApi);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
-  protected firstName(): string {
-    return (this.auth.user()?.displayName ?? '').split(/\s+/)[0] || 'there';
+  private readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
+
+  protected readonly canCreate = computed(() => this.auth.hasAnyRole([AppRole.ProjectManager]));
+  protected readonly projects = signal<ProjectSummary[]>([]);
+  protected readonly loading = signal(true);
+  protected readonly creating = signal(false);
+  protected readonly nameError = signal<string | null>(null);
+  protected readonly stageLabels = STAGE_LABELS;
+  protected readonly stagePillClass = stagePillClass;
+
+  protected readonly form = inject(NonNullableFormBuilder).group({
+    name: [
+      '',
+      [
+        Validators.required,
+        Validators.minLength(MIN_NAME_LENGTH),
+        Validators.maxLength(MAX_NAME_LENGTH),
+      ],
+    ],
+    description: ['', [Validators.maxLength(MAX_DESCRIPTION_LENGTH)]],
+  });
+
+  ngOnInit(): void {
+    this.api
+      .list()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (page) => {
+          this.projects.set(page.items);
+          this.loading.set(false);
+        },
+        error: (error: unknown) => {
+          this.toast.error(problemMessage(error));
+          this.loading.set(false);
+        },
+      });
+  }
+
+  protected create(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.creating.set(true);
+    this.nameError.set(null);
+    const { name, description } = this.form.getRawValue();
+    this.api
+      .create({ name: name.trim(), description: description.trim() || null })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (project) => {
+          this.toast.success(`Project “${project.name}” created.`);
+          void this.router.navigate(['/projects', project.id]);
+        },
+        error: (error: unknown) => {
+          this.nameError.set(fieldErrors(error)['name']?.[0] ?? null);
+          this.toast.error(problemMessage(error));
+          this.creating.set(false);
+        },
+      });
+  }
+
+  protected nameInvalid(): boolean {
+    const control = this.form.controls.name;
+    return control.invalid && control.touched;
   }
 }

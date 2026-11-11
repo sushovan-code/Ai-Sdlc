@@ -4,4 +4,5 @@ namespace AiSdlc.Api.Security;
 public static class AuthorizationPolicies
 {
     public const string UserAdministration = "user-administration";
+    public const string ProjectManagement = "project-management";
 }

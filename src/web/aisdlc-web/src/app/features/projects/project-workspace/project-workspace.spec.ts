@@ -11,8 +11,12 @@ import {
   makeFile,
   makeMember,
   makeProject,
+  makeTeam,
+  makeTeamMember,
+  NO_TEAM,
   onTheWire,
 } from '../../../testing/project-fixtures';
+import type { TeamOverview } from '../../../core/api/api-types';
 import { ProjectWorkspacePage } from './project-workspace';
 
 const PROJECT_URL = `/api/v1/projects/${PROJECT_ID}`;
@@ -38,7 +42,11 @@ describe('ProjectWorkspacePage', () => {
     await fixture.whenStable();
   }
 
-  function respondWith(project: ReturnType<typeof makeProject>): void {
+  function respondWith(
+    project: ReturnType<typeof makeProject>,
+    team: TeamOverview = NO_TEAM,
+  ): void {
+    http.expectOne({ method: 'GET', url: `${PROJECT_URL}/team` }).flush(team);
     http.expectOne({ method: 'GET', url: PROJECT_URL }).flush({
       ...project,
       files: project.files.map(onTheWire),
@@ -199,10 +207,62 @@ describe('ProjectWorkspacePage', () => {
     await fixture.whenStable();
 
     http
+      .expectOne({ method: 'GET', url: `${PROJECT_URL}/team` })
+      .flush({ title: 'Project not found.' }, { status: 404, statusText: 'Not Found' });
+    http
       .expectOne({ method: 'GET', url: PROJECT_URL })
       .flush({ title: 'Project not found.' }, { status: 404, statusText: 'Not Found' });
     await fixture.whenStable();
 
     expect(toastMessages().join(' ')).toContain('Project not found.');
+  });
+
+  it('changes the sprint length, tells the user, and reloads the capacity', async () => {
+    await render();
+    const select = host(fixture).querySelector('#sprint-weeks') as HTMLSelectElement;
+
+    select.value = '4';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    const request = http.expectOne({ method: 'PUT', url: `${PROJECT_URL}/sprint-cadence` });
+    expect(request.request.body).toEqual({ weeks: 4 });
+    request.flush({ weeks: 4 });
+    respondWith(
+      makeProject({ sprintWeeks: 4 }),
+      makeTeam({
+        sprintWeeks: 4,
+        members: [makeTeamMember({ sprintCapacityHours: 60, totalCapacityHours: 60 })],
+      }),
+    );
+    await fixture.whenStable();
+
+    expect(toastMessages()).toContain('Sprint length set to 4 weeks.');
+    expect(textOf(host(fixture))).toContain('60 h per 4-week sprint');
+  });
+
+  it('shows the reasons when a team sheet is rejected, one toast with the server message', async () => {
+    await render();
+    const inputs = host(fixture).querySelectorAll<HTMLInputElement>('input[type="file"]');
+    const file = new File(['x'], 'team.xlsx');
+    Object.defineProperty(inputs[1], 'files', {
+      value: { 0: file, length: 1, item: () => file },
+      configurable: true,
+    });
+
+    inputs[1].dispatchEvent(new Event('change', { bubbles: true }));
+    http
+      .expectOne({ method: 'POST', url: `${PROJECT_URL}/files/team-template` })
+      .flush(
+        { title: 'One or more validation errors occurred.' },
+        { status: 400, statusText: 'Bad Request' },
+      );
+    await fixture.whenStable();
+
+    expect(toastMessages('error').join(' ')).toContain('validation errors');
+  });
+
+  it('disables the sprint length for a member who is not a manager', async () => {
+    await render(makeProject({ canManage: false }), AppRole.Developer);
+
+    expect((host(fixture).querySelector('#sprint-weeks') as HTMLSelectElement).disabled).toBe(true);
   });
 });

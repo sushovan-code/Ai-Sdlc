@@ -7,6 +7,7 @@ public sealed record ProjectDetailDto(
     string Name,
     string? Description,
     ProjectStage Stage,
+    int SprintWeeks,
     DateTimeOffset CreatedAtUtc,
     Guid CreatedById,
     bool CanManage,

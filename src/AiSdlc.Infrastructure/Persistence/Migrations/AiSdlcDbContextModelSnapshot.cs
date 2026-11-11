@@ -74,6 +74,11 @@ namespace AiSdlc.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("SprintWeeks")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(2);
+
                     b.Property<string>("Stage")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -160,6 +165,49 @@ namespace AiSdlc.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("ProjectMembers", (string)null);
+                });
+
+            modelBuilder.Entity("AiSdlc.Domain.Projects.TeamMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("AvailabilityHours")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("CapacityHours")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectFileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Skills")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectFileId");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("TeamMembers", (string)null);
                 });
 
             modelBuilder.Entity("AiSdlc.Infrastructure.Persistence.ApplicationUser", b =>
@@ -403,6 +451,21 @@ namespace AiSdlc.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AiSdlc.Domain.Projects.TeamMember", b =>
+                {
+                    b.HasOne("AiSdlc.Domain.Projects.ProjectFile", null)
+                        .WithMany()
+                        .HasForeignKey("ProjectFileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AiSdlc.Domain.Projects.Project", null)
+                        .WithMany("Team")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -459,6 +522,8 @@ namespace AiSdlc.Infrastructure.Persistence.Migrations
                     b.Navigation("Files");
 
                     b.Navigation("Members");
+
+                    b.Navigation("Team");
                 });
 #pragma warning restore 612, 618
         }

@@ -115,6 +115,20 @@ You can also create an account on the sign-in page. New accounts start as Develo
 
 Files are checked for type, size (10 MB), signature and structure; macro-enabled files and mismatched content are rejected.
 
+### The team sheet
+The team template is an `.xlsx` whose first sheet has these columns (in any order, headers can sit below a title):
+
+| Name | Role | Skills | Capacity | Availability |
+| --- | --- | --- | --- | --- |
+| Asha Rao | Developer | C#, ASP.NET Core, SQL, EF Core | 40 | 30 |
+| Meera Iyer | QA | Testing, Selenium, API Testing | 40 | 40 |
+
+- **Capacity** and **Availability** are hours for a **2-week window**. Availability cannot exceed Capacity, and Capacity cannot exceed 80 hours (10 working days of 8 hours).
+- Skills are separated by commas or semicolons. Each person must be listed once.
+- A sheet with any bad row is refused as a whole, and the message names every problem by row so it can be fixed in one go.
+- The **sprint length** is set per project: 2 weeks (default), 3 or 4. A person's hours per sprint are their Availability × (weeks ÷ 2). Work that does not fit in the first sprint spills into the next until everything is assigned.
+- People on the sheet are capacity to plan with, not login accounts. The **Team capacity and sprints** panel shows each person's booked hours against capacity as a progress bar (nothing is booked until tasks are scheduled in a later release).
+
 ### 6. Run the tests
 ```bash
 dotnet test

@@ -28,6 +28,8 @@ public sealed class EndpointProtectionTests(ApiFactory factory)
         [HttpMethod.Get.Method, $"/api/v1/projects/{AnyUserId}/files/{AnyUserId}/download"],
         [HttpMethod.Delete.Method, $"/api/v1/projects/{AnyUserId}/files/{AnyUserId}"],
         [HttpMethod.Get.Method, "/api/v1/directory/users"],
+        [HttpMethod.Get.Method, $"/api/v1/projects/{AnyUserId}/team"],
+        [HttpMethod.Put.Method, $"/api/v1/projects/{AnyUserId}/sprint-cadence"],
     ];
 
     /// <summary>Endpoints only a Project Manager may call, whatever the project.</summary>
@@ -39,6 +41,7 @@ public sealed class EndpointProtectionTests(ApiFactory factory)
         [HttpMethod.Post.Method, $"/api/v1/projects/{AnyUserId}/files/requirements"],
         [HttpMethod.Delete.Method, $"/api/v1/projects/{AnyUserId}/files/{AnyUserId}"],
         [HttpMethod.Get.Method, "/api/v1/directory/users"],
+        [HttpMethod.Put.Method, $"/api/v1/projects/{AnyUserId}/sprint-cadence"],
     ];
 
     public static IEnumerable<object[]> EveryOtherRoleAgainstEveryManagerEndpoint() =>

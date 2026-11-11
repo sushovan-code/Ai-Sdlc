@@ -59,6 +59,7 @@ export interface ProjectDetail {
   name: string;
   description: string | null;
   stage: ProjectStage;
+  sprintWeeks: number;
   createdAtUtc: string;
   createdById: string;
   canManage: boolean;
@@ -71,3 +72,38 @@ export const FILE_KIND_ROUTES: Record<FileKind, string> = {
   Requirements: 'requirements',
   TeamTemplate: 'team-template',
 };
+
+/** Sprint lengths a project can use. The first is the default. */
+export const SPRINT_WEEK_OPTIONS: readonly number[] = [2, 3, 4];
+export const WORKING_HOURS_PER_DAY = 8;
+
+export interface SprintLoad {
+  sprint: number;
+  allocatedHours: number;
+  capacityHours: number;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  skills: string[];
+  /** Hours in a 2-week window, as written on the sheet. */
+  capacityHours: number;
+  availabilityHours: number;
+  /** Availability scaled to the project's sprint length. */
+  sprintCapacityHours: number;
+  allocatedHours: number;
+  totalCapacityHours: number;
+  utilizationPercent: number;
+  sprints: SprintLoad[];
+}
+
+export interface TeamOverview {
+  sprintWeeks: number;
+  hoursPerDay: number;
+  sprintCount: number;
+  totalAllocatedHours: number;
+  totalCapacityHours: number;
+  members: TeamMember[];
+}

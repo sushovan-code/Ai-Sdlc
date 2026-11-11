@@ -1,4 +1,10 @@
-import type { ProjectDetail, ProjectFile, ProjectMember } from '../core/api/api-types';
+import type {
+  ProjectDetail,
+  ProjectFile,
+  ProjectMember,
+  TeamMember,
+  TeamOverview,
+} from '../core/api/api-types';
 import { AppRole } from '../core/auth/roles';
 
 export const PROJECT_ID = 'p1111111-1111-1111-1111-111111111111';
@@ -36,6 +42,7 @@ export function makeProject(overrides: Partial<ProjectDetail> = {}): ProjectDeta
     name: 'Express Checkout',
     description: 'Faster pay',
     stage: 'Draft',
+    sprintWeeks: 2,
     createdAtUtc: '2026-11-11T09:00:00Z',
     createdById: '11111111-1111-1111-1111-111111111111',
     canManage: true,
@@ -49,3 +56,36 @@ export function makeProject(overrides: Partial<ProjectDetail> = {}): ProjectDeta
 export function onTheWire(file: ProjectFile): Record<string, unknown> {
   return { ...file, version: String(file.version), sizeBytes: String(file.sizeBytes) };
 }
+
+export function makeTeamMember(overrides: Partial<TeamMember> = {}): TeamMember {
+  return {
+    id: 't1111111-1111-1111-1111-111111111111',
+    name: 'Asha Rao',
+    role: 'Developer',
+    skills: ['C#', 'SQL'],
+    capacityHours: 40,
+    availabilityHours: 30,
+    sprintCapacityHours: 30,
+    allocatedHours: 0,
+    totalCapacityHours: 30,
+    utilizationPercent: 0,
+    sprints: [{ sprint: 1, allocatedHours: 0, capacityHours: 30 }],
+    ...overrides,
+  };
+}
+
+export function makeTeam(overrides: Partial<TeamOverview> = {}): TeamOverview {
+  const members = overrides.members ?? [makeTeamMember()];
+  return {
+    sprintWeeks: 2,
+    hoursPerDay: 8,
+    sprintCount: 1,
+    totalAllocatedHours: 0,
+    totalCapacityHours: members.reduce((sum, m) => sum + m.totalCapacityHours, 0),
+    members,
+    ...overrides,
+  };
+}
+
+/** The team response for a project with no team sheet yet. */
+export const NO_TEAM: TeamOverview = makeTeam({ members: [], totalCapacityHours: 0 });

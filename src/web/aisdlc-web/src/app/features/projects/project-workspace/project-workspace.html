@@ -37,8 +37,20 @@
       />
     </section>
 
+    <section class="card panel" aria-labelledby="capacity-title">
+      <h2 id="capacity-title">Team capacity and sprints</h2>
+      <p class="sub">
+        The people on the team sheet, what each can give per sprint and how much is booked.
+      </p>
+      <aisdlc-team-capacity
+        [team]="team()"
+        [canManage]="current.canManage"
+        (cadenceChange)="changeCadence($event)"
+      />
+    </section>
+
     <section class="card panel" aria-labelledby="team-title">
-      <h2 id="team-title">Team</h2>
+      <h2 id="team-title">Project members</h2>
       <p class="sub">{{ current.members.length }} member(s) can see this project.</p>
       <aisdlc-project-team
         [project]="current"

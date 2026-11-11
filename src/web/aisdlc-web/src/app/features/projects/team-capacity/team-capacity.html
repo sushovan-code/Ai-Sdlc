@@ -1,0 +1,86 @@
+@if (team(); as overview) {
+  <div class="cadence">
+    <div class="field">
+      <label for="sprint-weeks">Sprint length</label>
+      <select
+        id="sprint-weeks"
+        class="input plain"
+        [disabled]="!canManage()"
+        (change)="chooseWeeks($event)"
+      >
+        @for (weeks of weekOptions; track weeks) {
+          <option [value]="weeks" [selected]="weeks === overview.sprintWeeks">
+            {{ weeks }} weeks{{ weeks === 2 ? ' (default)' : '' }}
+          </option>
+        }
+      </select>
+    </div>
+    <p class="rule">
+      A working day counts as {{ overview.hoursPerDay }} hours. Availability on the sheet is for 2
+      weeks, so a {{ overview.sprintWeeks }}-week sprint gives each person
+      {{ overview.sprintWeeks / 2 | number: '1.0-2' }}× that. Work that does not fit in the first
+      sprint spills into the next.
+    </p>
+  </div>
+
+  @if (overview.members.length === 0) {
+    <p class="empty">Upload the team template to see who is on the team and their capacity.</p>
+  } @else {
+    <ul class="members" aria-label="Team utilization">
+      @for (member of overview.members; track member.id) {
+        <li>
+          <div class="who">
+            <span class="name">{{ member.name }}</span>
+            <span class="pill">{{ member.role }}</span>
+            <span class="skills">
+              @for (skill of member.skills; track skill) {
+                <span class="skill">{{ skill }}</span>
+              }
+            </span>
+          </div>
+          <div class="hours">
+            {{ member.availabilityHours | number: '1.0-2' }} h available per 2 weeks ·
+            {{ member.sprintCapacityHours | number: '1.0-2' }} h per {{ overview.sprintWeeks }}-week
+            sprint
+          </div>
+          <div class="usage">
+            <aisdlc-progress-bar
+              [value]="member.allocatedHours"
+              [max]="member.totalCapacityHours"
+              [label]="'Utilization of ' + member.name"
+              [valueText]="
+                (member.allocatedHours | number: '1.0-2') +
+                ' of ' +
+                (member.totalCapacityHours | number: '1.0-2') +
+                ' hours booked'
+              "
+            />
+            <span class="figures">
+              {{ member.allocatedHours | number: '1.0-2' }} of
+              {{ member.totalCapacityHours | number: '1.0-2' }} h ·
+              {{ member.utilizationPercent | number: '1.0-0' }}%
+            </span>
+          </div>
+          <details class="sprints">
+            <summary>Per-sprint breakdown</summary>
+            <ul>
+              @for (load of member.sprints; track load.sprint) {
+                <li>
+                  Sprint {{ load.sprint }}: {{ load.allocatedHours | number: '1.0-2' }} of
+                  {{ load.capacityHours | number: '1.0-2' }} h
+                </li>
+              }
+            </ul>
+          </details>
+        </li>
+      }
+    </ul>
+    <p class="total">
+      Team: {{ overview.totalAllocatedHours | number: '1.0-2' }} of
+      {{ overview.totalCapacityHours | number: '1.0-2' }} hours booked across
+      {{ overview.sprintCount }} sprint(s). Work is booked when tasks are scheduled.
+    </p>
+  }
+} @else {
+  <p class="empty">Loading team…</p>
+}

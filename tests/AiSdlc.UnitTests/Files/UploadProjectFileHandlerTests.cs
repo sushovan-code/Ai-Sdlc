@@ -4,6 +4,7 @@ using AiSdlc.Application.Common;
 using AiSdlc.Application.Files;
 using AiSdlc.Application.Files.UploadProjectFile;
 using AiSdlc.Application.Projects;
+using AiSdlc.Application.Team.Import;
 using AiSdlc.Domain.Auditing;
 using AiSdlc.Domain.Projects;
 using AiSdlc.Domain.Security;
@@ -18,6 +19,7 @@ public sealed class UploadProjectFileHandlerTests
     private readonly Project _project = TestProjects.WithTeam();
     private readonly IUserAccounts _accounts = Substitute.For<IUserAccounts>();
     private readonly IFileStorage _storage = Substitute.For<IFileStorage>();
+    private readonly ITeamSheetReader _teamSheets = Substitute.For<ITeamSheetReader>();
     private readonly IAuditLog _audit = Substitute.For<IAuditLog>();
     private readonly IProjectRepository _repository;
 
@@ -29,7 +31,7 @@ public sealed class UploadProjectFileHandlerTests
     }
 
     private UploadProjectFileHandler HandlerFor(ICurrentUser caller) =>
-        new(caller, _repository, _accounts, _storage, _audit, new FixedTime(TestProjects.Now));
+        new(caller, _repository, _accounts, _storage, _teamSheets, _audit, new FixedTime(TestProjects.Now));
 
     private UploadProjectFile Upload(FileKind kind, string name, byte[] content) =>
         new(_project.Id, kind, name, new MemoryStream(content));
@@ -169,5 +171,66 @@ public sealed class UploadProjectFileHandlerTests
             .HandleAsync(Upload(FileKind.Requirements, "a.txt", TestFiles.Text()), CancellationToken.None));
 
         await _storage.Received(1).DeleteAsync(storedKey!, Arg.Any<CancellationToken>());
+    }
+
+    private static RawTeamRow TeamRow(int number, string name, string capacity = "40", string availability = "30") =>
+        new(number, name, "Developer", "C#, SQL", capacity, availability);
+
+    [Fact]
+    public async Task Handle_ValidTeamSheet_StoresItAndMakesItsPeopleTheCurrentTeam()
+    {
+        _teamSheets.Read(Arg.Any<byte[]>()).Returns(Result<IReadOnlyList<RawTeamRow>>.Success([TeamRow(2, "Asha Rao"), TeamRow(3, "Ravi Kumar", "40", "40")]));
+
+        var result = await HandlerFor(TestUsers.Manager())
+            .HandleAsync(Upload(FileKind.TeamTemplate, "team.xlsx", TestFiles.Xlsx()), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        _project.CurrentTeam.Select(m => m.Name).ShouldBe(["Asha Rao", "Ravi Kumar"], ignoreOrder: true);
+        _project.CurrentTeam.Single(m => m.Name == "Asha Rao").AvailabilityHours.ShouldBe(30);
+        await _storage.ReceivedWithAnyArgs(1).SaveAsync(default!, default!, CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task Handle_TeamSheetWithBadRows_IsRefusedWithEveryProblemAndNothingIsKept()
+    {
+        _teamSheets.Read(Arg.Any<byte[]>()).Returns(Result<IReadOnlyList<RawTeamRow>>.Success(
+            [TeamRow(2, "Asha Rao", "30", "35"), TeamRow(3, "Ravi Kumar", "abc", "10")]));
+
+        var result = await HandlerFor(TestUsers.Manager())
+            .HandleAsync(Upload(FileKind.TeamTemplate, "team.xlsx", TestFiles.Xlsx()), CancellationToken.None);
+
+        var problems = result.Error.ValidationErrors!["file"];
+        problems.ShouldContain("Row 2: Availability (35) cannot be more than Capacity (30).");
+        problems.ShouldContain(p => p.StartsWith("Row 3: Capacity must be a number", StringComparison.Ordinal));
+        await _storage.DidNotReceiveWithAnyArgs().SaveAsync(default!, default!, CancellationToken.None);
+        _project.Files.ShouldBeEmpty();
+        await _audit.Received(1).WriteAsync(
+            Arg.Is<AuditRecord>(r => r.Action == AuditActions.FileRejected), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_TeamWorkbookThatCannotBeRead_IsRefused()
+    {
+        var unreadable = new Error(TeamSheetValidator.InvalidCode, "x", ErrorType.Validation)
+        {
+            ValidationErrors = new Dictionary<string, string[]> { ["file"] = ["The first sheet is missing the column(s): Skills."] },
+        };
+        _teamSheets.Read(Arg.Any<byte[]>()).Returns(Result<IReadOnlyList<RawTeamRow>>.Failure(unreadable));
+
+        var result = await HandlerFor(TestUsers.Manager())
+            .HandleAsync(Upload(FileKind.TeamTemplate, "team.xlsx", TestFiles.Xlsx()), CancellationToken.None);
+
+        result.Error.ValidationErrors!["file"].ShouldBe(["The first sheet is missing the column(s): Skills."]);
+        _project.Files.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Handle_RequirementsUpload_NeverTouchesTheTeamSheetReader()
+    {
+        await HandlerFor(TestUsers.Manager())
+            .HandleAsync(Upload(FileKind.Requirements, "reqs.txt", TestFiles.Text()), CancellationToken.None);
+
+        _teamSheets.DidNotReceiveWithAnyArgs().Read(default!);
+        _project.CurrentTeam.ShouldBeEmpty();
     }
 }

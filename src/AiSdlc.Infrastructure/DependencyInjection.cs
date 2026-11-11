@@ -8,6 +8,7 @@ using AiSdlc.Infrastructure.Projects;
 using AiSdlc.Infrastructure.Security;
 using AiSdlc.Infrastructure.Seeding;
 using AiSdlc.Infrastructure.Storage;
+using AiSdlc.Infrastructure.Team;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -36,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<IUserAccounts, IdentityUserAccounts>();
         services.AddScoped<IAuditLog, AuditLog>();
         services.AddScoped<IProjectRepository, ProjectRepository>();
+        services.AddSingleton<ITeamSheetReader, ClosedXmlTeamSheetReader>();
 
         services.AddOptions<StorageOptions>()
             .Bind(configuration.GetSection(StorageOptions.SectionName))

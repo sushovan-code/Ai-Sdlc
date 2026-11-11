@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using AiSdlc.Application.Abstractions;
 using AiSdlc.Application.Projects;
+using AiSdlc.Application.Team.GetTeam;
 
 namespace AiSdlc.IntegrationTests.Infrastructure;
 
@@ -35,6 +36,9 @@ public static class ProjectApiExtensions
 
     public static async Task<ProjectDetailDto> GetProjectAsync(this HttpClient client, Guid projectId) =>
         (await client.GetFromJsonAsync<ProjectDetailDto>($"/api/v1/projects/{projectId}", ApiJson.Options))!;
+
+    public static async Task<TeamOverviewDto> GetTeamAsync(this HttpClient client, Guid projectId) =>
+        (await client.GetFromJsonAsync<TeamOverviewDto>($"/api/v1/projects/{projectId}/team", ApiJson.Options))!;
 
     public static async Task AddMemberAsync(this HttpClient manager, Guid projectId, Guid userId)
     {

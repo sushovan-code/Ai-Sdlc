@@ -18,4 +18,6 @@ public static class AuditActions
     public const string FileRejected = "file.rejected";
     public const string FileDownloaded = "file.downloaded";
     public const string FileDeleted = "file.deleted";
+    public const string TeamImported = "team.imported";
+    public const string SprintCadenceChanged = "project.sprint-cadence-changed";
 }

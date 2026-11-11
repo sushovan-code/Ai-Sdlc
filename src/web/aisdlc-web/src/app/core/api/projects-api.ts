@@ -11,6 +11,8 @@ import {
   type ProjectFile,
   type ProjectMember,
   type ProjectSummary,
+  type TeamMember,
+  type TeamOverview,
   type UserDto,
 } from './api-types';
 
@@ -26,8 +28,18 @@ interface RawSummary extends Omit<ProjectSummary, 'memberCount'> {
   memberCount: Numeric;
 }
 
-interface RawDetail extends Omit<ProjectDetail, 'files'> {
+interface RawDetail extends Omit<ProjectDetail, 'files' | 'sprintWeeks'> {
   files: RawFile[];
+  sprintWeeks: Numeric;
+}
+
+interface RawTeam {
+  sprintWeeks: Numeric;
+  hoursPerDay: Numeric;
+  sprintCount: Numeric;
+  totalAllocatedHours: Numeric;
+  totalCapacityHours: Numeric;
+  members: Record<string, unknown>[];
 }
 
 interface RawPage<T> {
@@ -41,6 +53,26 @@ const toFile = (file: RawFile): ProjectFile => ({
   ...file,
   version: Number(file.version),
   sizeBytes: Number(file.sizeBytes),
+});
+
+const num = (value: unknown): number => Number(value);
+
+const toMember = (raw: Record<string, unknown>): TeamMember => ({
+  id: raw['id'] as string,
+  name: raw['name'] as string,
+  role: raw['role'] as string,
+  skills: raw['skills'] as string[],
+  capacityHours: num(raw['capacityHours']),
+  availabilityHours: num(raw['availabilityHours']),
+  sprintCapacityHours: num(raw['sprintCapacityHours']),
+  allocatedHours: num(raw['allocatedHours']),
+  totalCapacityHours: num(raw['totalCapacityHours']),
+  utilizationPercent: num(raw['utilizationPercent']),
+  sprints: (raw['sprints'] as Record<string, unknown>[]).map((s) => ({
+    sprint: num(s['sprint']),
+    allocatedHours: num(s['allocatedHours']),
+    capacityHours: num(s['capacityHours']),
+  })),
 });
 
 const toSummary = (project: RawSummary): ProjectSummary => ({
@@ -67,9 +99,32 @@ export class ProjectsApi {
   }
 
   get(projectId: string): Observable<ProjectDetail> {
+    return this.http.get<RawDetail>(`${this.base}/${projectId}`).pipe(
+      map((project) => ({
+        ...project,
+        sprintWeeks: Number(project.sprintWeeks),
+        files: project.files.map(toFile),
+      })),
+    );
+  }
+
+  getTeam(projectId: string): Observable<TeamOverview> {
+    return this.http.get<RawTeam>(`${this.base}/${projectId}/team`).pipe(
+      map((team) => ({
+        sprintWeeks: num(team.sprintWeeks),
+        hoursPerDay: num(team.hoursPerDay),
+        sprintCount: num(team.sprintCount),
+        totalAllocatedHours: num(team.totalAllocatedHours),
+        totalCapacityHours: num(team.totalCapacityHours),
+        members: team.members.map(toMember),
+      })),
+    );
+  }
+
+  setSprintCadence(projectId: string, weeks: number): Observable<void> {
     return this.http
-      .get<RawDetail>(`${this.base}/${projectId}`)
-      .pipe(map((project) => ({ ...project, files: project.files.map(toFile) })));
+      .put<unknown>(`${this.base}/${projectId}/sprint-cadence`, { weeks })
+      .pipe(map(() => undefined));
   }
 
   create(request: CreateProjectRequest): Observable<ProjectSummary> {

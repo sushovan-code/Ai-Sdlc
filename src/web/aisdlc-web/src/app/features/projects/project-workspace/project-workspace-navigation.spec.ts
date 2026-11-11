@@ -10,6 +10,7 @@ import {
   makeFile,
   makeMember,
   makeProject,
+  NO_TEAM,
   onTheWire,
 } from '../../../testing/project-fixtures';
 import { ProjectWorkspacePage } from './project-workspace';
@@ -33,6 +34,7 @@ describe('ProjectWorkspacePage step navigation', () => {
     fixture = TestBed.createComponent(ProjectWorkspacePage);
     fixture.componentRef.setInput('projectId', PROJECT_ID);
     await fixture.whenStable();
+    http.expectOne({ method: 'GET', url: `${PROJECT_URL}/team` }).flush(NO_TEAM);
     http.expectOne({ method: 'GET', url: PROJECT_URL }).flush({
       ...project,
       files: project.files.map(onTheWire),

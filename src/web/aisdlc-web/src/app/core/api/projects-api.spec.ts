@@ -105,4 +105,60 @@ describe('ProjectsApi', () => {
       .expectOne({ method: 'DELETE', url: `/api/v1/projects/${PROJECT_ID}/files/f1` })
       .flush(null);
   });
+
+  it('reads the team with every number as a real number', () => {
+    let team: unknown;
+
+    api.getTeam(PROJECT_ID).subscribe((result) => (team = result));
+    http.expectOne(`/api/v1/projects/${PROJECT_ID}/team`).flush({
+      sprintWeeks: '4',
+      hoursPerDay: '8',
+      sprintCount: '1',
+      totalAllocatedHours: 0,
+      totalCapacityHours: 60,
+      members: [
+        {
+          id: 'a',
+          name: 'Asha Rao',
+          role: 'Developer',
+          skills: ['C#'],
+          capacityHours: 40,
+          availabilityHours: 30,
+          sprintCapacityHours: 60,
+          allocatedHours: 0,
+          totalCapacityHours: 60,
+          utilizationPercent: 0,
+          sprints: [{ sprint: '1', allocatedHours: 0, capacityHours: 60 }],
+        },
+      ],
+    });
+
+    expect(team).toMatchObject({
+      sprintWeeks: 4,
+      hoursPerDay: 8,
+      members: [{ name: 'Asha Rao', sprintCapacityHours: 60, sprints: [{ sprint: 1 }] }],
+    });
+  });
+
+  it('changes the sprint length with a PUT', () => {
+    api.setSprintCadence(PROJECT_ID, 3).subscribe();
+
+    const request = http.expectOne({
+      method: 'PUT',
+      url: `/api/v1/projects/${PROJECT_ID}/sprint-cadence`,
+    });
+    expect(request.request.body).toEqual({ weeks: 3 });
+    request.flush({ weeks: 3 });
+  });
+
+  it('carries the sprint length on a project detail', () => {
+    let weeks = 0;
+
+    api.get(PROJECT_ID).subscribe((project) => (weeks = project.sprintWeeks));
+    http
+      .expectOne(`/api/v1/projects/${PROJECT_ID}`)
+      .flush({ ...makeProject(), sprintWeeks: '3', files: [] });
+
+    expect(weeks).toBe(3);
+  });
 });

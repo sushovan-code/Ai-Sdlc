@@ -17,6 +17,7 @@ import type {
   ProjectDetail,
   ProjectFile,
   ProjectMember,
+  TeamOverview,
   UserDto,
 } from '../../../core/api/api-types';
 import { problemMessage } from '../../../core/api/problem';
@@ -29,13 +30,14 @@ import { Stepper } from '../../../shared/ui/stepper/stepper';
 import { ProjectFiles, UploadRequest } from '../project-files/project-files';
 import { ProjectTeam } from '../project-team/project-team';
 import { StagePanel } from '../stage-panel/stage-panel';
+import { TeamCapacity } from '../team-capacity/team-capacity';
 import { STAGE_LABELS } from '../stage-labels';
 import { WORKFLOW, blockReason, furthestStep, stepsFor } from '../workflow';
 
 /** One project: where it is in the lifecycle, the stage being viewed, its input files and who is on it. */
 @Component({
   selector: 'aisdlc-project-workspace',
-  imports: [RouterLink, Icon, Stepper, ProjectFiles, ProjectTeam, StagePanel],
+  imports: [RouterLink, Icon, Stepper, ProjectFiles, ProjectTeam, StagePanel, TeamCapacity],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './project-workspace.html',
   styleUrl: './project-workspace.scss',
@@ -51,6 +53,7 @@ export class ProjectWorkspacePage implements OnInit {
   readonly projectId = input.required<string>();
 
   protected readonly project = signal<ProjectDetail | null>(null);
+  protected readonly team = signal<TeamOverview | null>(null);
   protected readonly loading = signal(true);
   protected readonly notFound = signal(false);
   protected readonly uploadingKind = signal<FileKind | null>(null);
@@ -124,6 +127,13 @@ export class ProjectWorkspacePage implements OnInit {
     );
   }
 
+  protected changeCadence(weeks: number): void {
+    this.act(
+      this.api.setSprintCadence(this.projectId(), weeks),
+      `Sprint length set to ${weeks} weeks.`,
+    );
+  }
+
   protected addMember(user: UserDto): void {
     this.act(
       this.api.addMember(this.projectId(), user.id),
@@ -154,6 +164,14 @@ export class ProjectWorkspacePage implements OnInit {
   }
 
   private reload(): void {
+    this.api
+      .getTeam(this.projectId())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (team) => this.team.set(team),
+        error: (error: unknown) => this.toast.error(problemMessage(error)),
+      });
+
     this.api
       .get(this.projectId())
       .pipe(takeUntilDestroyed(this.destroyRef))

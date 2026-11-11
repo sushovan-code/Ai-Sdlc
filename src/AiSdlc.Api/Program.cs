@@ -58,6 +58,7 @@ v1.MapAuthEndpoints();
 v1.MapUserEndpoints();
 v1.MapProjectEndpoints();
 v1.MapProjectFileEndpoints();
+v1.MapTeamEndpoints();
 v1.MapDirectoryEndpoints();
 
 app.Run();

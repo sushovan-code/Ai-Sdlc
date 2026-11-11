@@ -10,6 +10,8 @@ using AiSdlc.Application.Projects.CreateProject;
 using AiSdlc.Application.Projects.GetProject;
 using AiSdlc.Application.Projects.ListProjects;
 using AiSdlc.Application.Projects.RemoveProjectMember;
+using AiSdlc.Application.Team.GetTeam;
+using AiSdlc.Application.Team.SetSprintCadence;
 using AiSdlc.Application.UserDirectory.SearchUsers;
 using AiSdlc.Application.Users.ListUsers;
 using AiSdlc.Application.Users.SetUserActive;
@@ -43,6 +45,8 @@ public static class DependencyInjection
         services.AddScoped<DownloadProjectFileHandler>();
         services.AddScoped<DeleteProjectFileHandler>();
         services.AddScoped<SearchUsersHandler>();
+        services.AddScoped<GetTeamHandler>();
+        services.AddScoped<SetSprintCadenceHandler>();
 
         return services;
     }

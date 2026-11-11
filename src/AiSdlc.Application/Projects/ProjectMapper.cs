@@ -41,6 +41,7 @@ internal static class ProjectMapper
             project.Name,
             project.Description,
             project.Stage,
+            project.SprintWeeks,
             project.CreatedAtUtc,
             project.CreatedById,
             ProjectPermissions.CanManage(currentUser.Role),

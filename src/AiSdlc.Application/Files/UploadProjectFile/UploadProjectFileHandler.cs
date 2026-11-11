@@ -2,7 +2,9 @@ using System.Security.Cryptography;
 using AiSdlc.Application.Abstractions;
 using AiSdlc.Application.Common;
 using AiSdlc.Application.Projects;
+using AiSdlc.Application.Team.Import;
 using AiSdlc.Domain.Auditing;
+using AiSdlc.Domain.Projects;
 
 namespace AiSdlc.Application.Files.UploadProjectFile;
 
@@ -15,6 +17,7 @@ public sealed class UploadProjectFileHandler(
     IProjectRepository projects,
     IUserAccounts accounts,
     IFileStorage storage,
+    ITeamSheetReader teamSheets,
     IAuditLog audit,
     TimeProvider time)
 {
@@ -37,6 +40,14 @@ public sealed class UploadProjectFileHandler(
 
         var content = await ReadBoundedAsync(command.Content, cancellationToken);
         var rejection = Check(command, extension, content);
+        IReadOnlyList<TeamMemberDraft> team = [];
+        if (rejection is null && command.Kind == FileKind.TeamTemplate)
+        {
+            var parsed = ReadTeam(content);
+            rejection = parsed.IsFailure ? parsed.Error : null;
+            team = parsed.IsSuccess ? parsed.Value : [];
+        }
+
         if (rejection is not null)
         {
             await AuditRejectionAsync(project.Id, fileName, rejection, cancellationToken);
@@ -57,6 +68,11 @@ public sealed class UploadProjectFileHandler(
             storageKey,
             userId,
             time.GetUtcNow());
+
+        if (command.Kind == FileKind.TeamTemplate)
+        {
+            project.AttachTeam(file, team);
+        }
 
         await SaveOrCleanUpAsync(storageKey, cancellationToken);
 
@@ -81,6 +97,15 @@ public sealed class UploadProjectFileHandler(
             file.UploadedById,
             uploader?.DisplayName ?? string.Empty,
             IsLatest: true));
+    }
+
+    /// <summary>The people on a team sheet. A sheet with any bad row is refused as a whole, with every problem listed.</summary>
+    private Result<IReadOnlyList<TeamMemberDraft>> ReadTeam(byte[] content)
+    {
+        var rows = teamSheets.Read(content);
+        return rows.IsFailure
+            ? Result<IReadOnlyList<TeamMemberDraft>>.Failure(rows.Error)
+            : TeamSheetValidator.Validate(rows.Value);
     }
 
     private static Error? Check(UploadProjectFile command, string extension, byte[] content)

@@ -17,6 +17,7 @@ internal sealed class ProjectRepository(AiSdlcDbContext db) : IProjectRepository
         db.Projects
             .Include(p => p.Members)
             .Include(p => p.Files)
+            .Include(p => p.Team)
             .AsSplitQuery()
             .FirstOrDefaultAsync(p => p.Id == projectId, cancellationToken);
 

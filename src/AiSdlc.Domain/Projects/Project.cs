@@ -1,3 +1,5 @@
+using AiSdlc.Domain.Planning;
+
 namespace AiSdlc.Domain.Projects;
 
 /// <summary>A software project that moves from requirements to approved test cases. The aggregate guards its own invariants.</summary>
@@ -5,6 +7,7 @@ public sealed class Project
 {
     private readonly List<ProjectMember> _members = [];
     private readonly List<ProjectFile> _files = [];
+    private readonly List<TeamMember> _team = [];
 
     private Project()
     {
@@ -22,9 +25,25 @@ public sealed class Project
 
     public ProjectStage Stage { get; private set; }
 
+    /// <summary>Length of a sprint in weeks: 2, 3 or 4.</summary>
+    public int SprintWeeks { get; private set; } = SprintRules.DefaultWeeks;
+
     public IReadOnlyCollection<ProjectMember> Members => _members;
 
     public IReadOnlyCollection<ProjectFile> Files => _files;
+
+    /// <summary>Every team-sheet row ever imported, across versions. Use <see cref="CurrentTeam"/> to plan with.</summary>
+    public IReadOnlyCollection<TeamMember> Team => _team;
+
+    /// <summary>The people on the newest team sheet that has not been deleted.</summary>
+    public IReadOnlyList<TeamMember> CurrentTeam
+    {
+        get
+        {
+            var latest = LatestFile(FileKind.TeamTemplate);
+            return latest is null ? [] : _team.Where(m => m.ProjectFileId == latest.Id).ToList();
+        }
+    }
 
     /// <summary>Creates a project whose creator is its first member and owner.</summary>
     public static Project Create(string name, string? description, Guid creatorId, DateTimeOffset now)
@@ -117,6 +136,40 @@ public sealed class Project
         file.MarkDeleted(deletedBy, now);
         RefreshStage();
         return file;
+    }
+
+    /// <returns><c>false</c> when <paramref name="weeks"/> is not an allowed sprint length.</returns>
+    public bool SetSprintCadence(int weeks)
+    {
+        if (!SprintRules.IsValidCadence(weeks))
+        {
+            return false;
+        }
+
+        SprintWeeks = weeks;
+        return true;
+    }
+
+    /// <summary>Stores the people from a validated team sheet against the file version they came from.</summary>
+    public void AttachTeam(ProjectFile teamFile, IEnumerable<TeamMemberDraft> drafts)
+    {
+        ArgumentNullException.ThrowIfNull(teamFile);
+        if (teamFile.ProjectId != Id || teamFile.Kind != FileKind.TeamTemplate)
+        {
+            throw new ArgumentException("The file must be a team template of this project.", nameof(teamFile));
+        }
+
+        _team.AddRange(drafts.Select(d => new TeamMember
+        {
+            Id = Guid.NewGuid(),
+            ProjectId = Id,
+            ProjectFileId = teamFile.Id,
+            Name = d.Name,
+            Role = d.Role,
+            Skills = d.Skills,
+            CapacityHours = d.CapacityHours,
+            AvailabilityHours = d.AvailabilityHours,
+        }));
     }
 
     /// <summary>The newest file of a kind that has not been deleted.</summary>

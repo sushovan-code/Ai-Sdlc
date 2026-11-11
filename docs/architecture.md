@@ -19,8 +19,9 @@ Domain (project, gate, artifact version, team member, sprint, scheduler) <- Appl
 ## Main flows
 1. Upload: validate type, size and signature, hash, store a new file version, audit.
 2. Generate (built for gate 1, the analysis): the handler checks the stage and that the caller is a Project Manager, reads the latest requirements, and the governance guard masks personal data and secrets. The specialist agent drafts, the retrieval agent attaches evidence quotes, the critic and governance agents annotate, and the result is stored as a new artifact version in `PendingReview`. Every model call is audited. See ADR 0003.
-3. Review: an authorised approver approves, rejects, edits or regenerates with feedback. Approval moves the gate and unlocks the next stage.
-4. Plan sprints: after gate 2 the tasks agent proposes tasks; the scheduler assigns them across sprints using member capacity.
+3. Review: the stage's reviewer role (Project Manager, Architect, Project Manager, QA for gates 1 to 4) approves, rejects, edits or regenerates with feedback. Approval moves the gate and unlocks the next stage. Gates 2 to 4 share one generic pipeline (ADR 0004).
+4. Plan sprints: after gate 2 the tasks agent proposes tasks; the deterministic scheduler assigns them across sprints using member capacity, and the team page shows the booked hours.
+5. Wrap-up: traceability from requirements to tests, the project audit trail and a Markdown report.
 
 ## Cross-cutting
 Deny-by-default authorisation with per-endpoint policies and project-membership checks; append-only audit log; structured logs without PII; rate limiting on auth and write endpoints; security headers and strict CORS.

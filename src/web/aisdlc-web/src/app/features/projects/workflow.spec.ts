@@ -2,21 +2,23 @@ import { AppRole } from '../../core/auth/roles';
 import { WORKFLOW, blockReason, furthestStep, stepsFor } from './workflow';
 
 describe('workflow', () => {
-  it('has the five stages in order, each after the first closed by a gate with its approver', () => {
+  it('has six stages in order, the four between the first and last closed by a gate with its approver', () => {
     expect(WORKFLOW.map((s) => s.key)).toEqual([
       'files',
       'analysis',
       'architecture',
       'tasks',
       'tests',
+      'wrapup',
     ]);
-    expect(WORKFLOW.map((s) => s.gate?.number ?? null)).toEqual([null, 1, 2, 3, 4]);
+    expect(WORKFLOW.map((s) => s.gate?.number ?? null)).toEqual([null, 1, 2, 3, 4, null]);
     expect(WORKFLOW.map((s) => s.gate?.approver ?? null)).toEqual([
       null,
       AppRole.ProjectManager,
       AppRole.Architect,
       AppRole.ProjectManager,
       AppRole.QA,
+      null,
     ]);
   });
 
@@ -31,6 +33,7 @@ describe('workflow', () => {
       'done',
       'done',
       'current',
+      'upcoming',
       'upcoming',
       'upcoming',
     ]);
@@ -77,8 +80,9 @@ describe('workflow', () => {
         'upcoming',
         'upcoming',
         'upcoming',
+        'upcoming',
       ]);
-      expect(steps.map((s) => s.reachable)).toEqual([true, false, false, false, false]);
+      expect(steps.map((s) => s.reachable)).toEqual([true, false, false, false, false, false]);
     });
 
     it('marks the first stage done and the second current once both files are in', () => {
@@ -90,8 +94,9 @@ describe('workflow', () => {
         'upcoming',
         'upcoming',
         'upcoming',
+        'upcoming',
       ]);
-      expect(steps.map((s) => s.reachable)).toEqual([true, true, false, false, false]);
+      expect(steps.map((s) => s.reachable)).toEqual([true, true, false, false, false, false]);
     });
   });
 });

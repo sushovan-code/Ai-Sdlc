@@ -63,7 +63,37 @@
       <aisdlc-analysis-panel
         [projectId]="current.id"
         [canManage]="current.canManage"
-        (approved)="analysisApproved()"
+        (approved)="gateApproved()"
+      />
+    </section>
+  } @else if (selectedStep().key === 'architecture') {
+    <section class="card panel" aria-label="Architecture plan">
+      <aisdlc-stage-review
+        [projectId]="current.id"
+        stage="architecture"
+        title="Architecture plan"
+        intro="AI drafts the components, data, decisions and risks from the approved requirements. The Software Architect edits and approves it at gate 2."
+        (approved)="gateApproved()"
+      />
+    </section>
+  } @else if (selectedStep().key === 'tasks') {
+    <section class="card panel" aria-label="Development tasks">
+      <aisdlc-stage-review
+        [projectId]="current.id"
+        stage="tasks"
+        title="Development tasks"
+        intro="AI breaks the approved architecture into tasks and a scheduler spreads them over sprints using each person's capacity. The Project Manager reviews and approves them at gate 3."
+        (approved)="gateApproved()"
+      />
+    </section>
+  } @else if (selectedStep().key === 'tests') {
+    <section class="card panel" aria-label="Test cases">
+      <aisdlc-stage-review
+        [projectId]="current.id"
+        stage="test-cases"
+        title="QA test cases"
+        intro="AI writes test cases that trace back to the requirements and tasks. QA edits and approves them at gate 4, the final gate."
+        (approved)="gateApproved()"
       />
     </section>
   } @else {

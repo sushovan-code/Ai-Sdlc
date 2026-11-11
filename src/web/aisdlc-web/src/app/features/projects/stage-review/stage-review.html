@@ -1,0 +1,260 @@
+@if (overview(); as data) {
+  <header class="head">
+    <div>
+      <h2>{{ title() }}</h2>
+      <p class="sub">{{ intro() }}</p>
+    </div>
+    @if (latest(); as current) {
+      <span
+        class="pill"
+        [class.pill-success]="current.status === 'Approved'"
+        [class.pill-warning]="current.status === 'PendingReview'"
+        [class.pill-danger]="current.status === 'Rejected'"
+      >
+        Version {{ current.version }} · {{ statusLabel(current.status) }}
+      </span>
+    }
+  </header>
+
+  <p class="note" role="status" aria-live="polite">
+    {{ busy() === 'generate' ? 'The AI is drafting. This can take a minute.' : '' }}
+  </p>
+
+  @if (!latest()) {
+    <div class="empty">
+      @if (data.canGenerate && canAct()) {
+        <p>No draft yet. Generate a first draft from the approved earlier stages.</p>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="busy() !== null"
+          (click)="generate()"
+        >
+          <aisdlc-icon name="copilot" [size]="16" />
+          {{ busy() === 'generate' ? 'Drafting…' : 'Generate with AI' }}
+        </button>
+      } @else if (!data.canGenerate) {
+        <p><aisdlc-icon name="lock" [size]="14" /> {{ data.blockedReason }}</p>
+      } @else {
+        <p>No draft yet. The {{ roleLabel(data.approverRole) }} can generate it.</p>
+      }
+    </div>
+  } @else {
+    @let current = latest()!;
+    @let editing = draft();
+
+    @if (isApproved()) {
+      <p #approvedBanner class="banner ok" role="status" tabindex="-1">
+        <aisdlc-icon name="check-circle" [size]="18" />
+        Approved by the {{ roleLabel(approval()?.reviewerRole ?? '') }} on
+        {{ approval()?.decidedAtUtc | date: 'medium' }}.
+      </p>
+    }
+
+    @if (editing) {
+      <section class="block">
+        <label for="stage-summary"><h3>Summary</h3></label>
+        <textarea
+          id="stage-summary"
+          class="input plain"
+          rows="2"
+          [value]="editing.summary"
+          (input)="setSummary($event)"
+        ></textarea>
+      </section>
+      @for (section of editing.sections; track $index; let s = $index) {
+        <section class="block">
+          <h3>{{ section.title }}</h3>
+          <ul class="items">
+            @for (item of section.items; track item.id; let i = $index) {
+              <li class="editing">
+                <span class="id">{{ item.id }}</span>
+                <div class="fields">
+                  <label [for]="'t-' + s + '-' + i">Title</label>
+                  <input
+                    [id]="'t-' + s + '-' + i"
+                    class="input plain"
+                    [value]="item.title"
+                    (input)="setTitle(s, i, $event)"
+                  />
+                  <label [for]="'x-' + s + '-' + i">Details</label>
+                  <textarea
+                    [id]="'x-' + s + '-' + i"
+                    class="input plain"
+                    rows="3"
+                    [value]="item.text"
+                    (input)="setText(s, i, $event)"
+                  ></textarea>
+                  <label [for]="'g-' + s + '-' + i">Labels (comma separated)</label>
+                  <input
+                    [id]="'g-' + s + '-' + i"
+                    class="input plain"
+                    [value]="item.tags.join(', ')"
+                    (input)="setTags(s, i, $event)"
+                  />
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+      <div class="actions">
+        <button type="button" class="btn" [disabled]="busy() !== null" (click)="cancelEditing()">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="busy() !== null"
+          (click)="saveEdit()"
+        >
+          <aisdlc-icon name="check" [size]="16" /> Save as new version
+        </button>
+      </div>
+    } @else {
+      <section class="block">
+        <h3>Summary</h3>
+        <p>{{ current.content.summary }}</p>
+        @if (current.feedback) {
+          <p class="note">Written after this feedback: “{{ current.feedback }}”</p>
+        }
+        @if (current.source === 'Human') {
+          <p class="note">This version was edited by hand.</p>
+        }
+      </section>
+
+      @for (section of current.content.sections; track section.title) {
+        <section class="block">
+          <h3>{{ section.title }} ({{ section.items.length }})</h3>
+          <ul class="items">
+            @for (item of section.items; track item.id) {
+              <li>
+                <span class="id">{{ item.id }}</span>
+                <div class="body">
+                  <strong>{{ item.title }}</strong>
+                  <span class="text">{{ item.text }}</span>
+                  <span class="refs">
+                    @for (tag of item.tags; track tag) {
+                      <span class="tag">{{ tag }}</span>
+                    }
+                    @for (ref of item.refs; track ref) {
+                      <span class="ref" title="Traces back to {{ ref }}">{{ ref }}</span>
+                    }
+                  </span>
+                </div>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (current.notes.flags.length > 0) {
+        <section class="block review-notes">
+          <h3>Automatic review</h3>
+          <ul class="plain">
+            @for (flag of current.notes.flags; track flag.code + flag.message) {
+              <li><aisdlc-icon name="alert" [size]="14" /> {{ flag.message }}</li>
+            }
+          </ul>
+        </section>
+      }
+
+      <p class="meta">
+        Drafted {{ current.createdAtUtc | date: 'medium' }} by {{ current.model }} ({{
+          current.promptVersion
+        }}). AI can be wrong: check it against the earlier stages.
+      </p>
+
+      @if (canAct()) {
+        @if (isPending() || canRegenerate()) {
+          <div class="review">
+            <label for="stage-comment">
+              {{
+                isPending()
+                  ? 'Comment (feedback for a new draft, or the reason for rejecting)'
+                  : 'Feedback for the next draft (optional)'
+              }}
+            </label>
+            <textarea
+              id="stage-comment"
+              class="input plain"
+              rows="3"
+              maxlength="2000"
+              [value]="comment()"
+              (input)="typeComment($event)"
+            ></textarea>
+            <div class="actions">
+              <button type="button" class="btn" [disabled]="busy() !== null" (click)="generate()">
+                <aisdlc-icon name="copilot" [size]="16" />
+                {{ busy() === 'generate' ? 'Drafting…' : 'Regenerate' }}
+              </button>
+              @if (canEdit()) {
+                <button
+                  type="button"
+                  class="btn"
+                  [disabled]="busy() !== null"
+                  (click)="startEditing()"
+                >
+                  Edit by hand
+                </button>
+              }
+              @if (isPending()) {
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  [disabled]="busy() !== null || comment().trim().length === 0"
+                  (click)="reject()"
+                >
+                  <aisdlc-icon name="x" [size]="16" /> Reject
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  [disabled]="busy() !== null"
+                  (click)="approve()"
+                >
+                  <aisdlc-icon name="check" [size]="16" /> Approve
+                </button>
+              }
+            </div>
+          </div>
+        }
+      } @else if (!isApproved()) {
+        <p class="note">
+          Only the {{ roleLabel(data.approverRole) }} can generate and review this.
+        </p>
+      }
+
+      @if (olderVersions().length > 0) {
+        <details class="block">
+          <summary>Earlier versions ({{ olderVersions().length }})</summary>
+          <ul class="plain">
+            @for (old of olderVersions(); track old.version) {
+              <li>
+                Version {{ old.version }} · {{ statusLabel(old.status) }} ·
+                {{ old.source === 'Human' ? 'edited by hand' : 'AI draft' }} ·
+                {{ old.createdAtUtc | date: 'medium' }}
+                @if (old.feedback) {
+                  · feedback: “{{ old.feedback }}”
+                }
+                @for (decision of old.decisions; track decision.decidedAtUtc) {
+                  · {{ statusLabel(decision.kind) }} by {{ roleLabel(decision.reviewerRole) }}
+                  @if (decision.comment) {
+                    (“{{ decision.comment }}”)
+                  }
+                }
+              </li>
+            }
+          </ul>
+        </details>
+      }
+    }
+  }
+} @else if (loadFailed()) {
+  <p class="alert alert-error" role="alert">
+    Could not load this stage.
+    <button type="button" class="btn btn-sm" (click)="load()">Try again</button>
+  </p>
+} @else {
+  <p class="loading">Loading…</p>
+}

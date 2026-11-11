@@ -28,6 +28,7 @@ import { ToastService } from '../../../core/notifications/toast.service';
 import { Icon } from '../../../shared/ui/icon/icon';
 import { Stepper } from '../../../shared/ui/stepper/stepper';
 import { AnalysisPanel } from '../analysis-panel/analysis-panel';
+import { StageReview } from '../stage-review/stage-review';
 import { ProjectFiles, UploadRequest } from '../project-files/project-files';
 import { ProjectTeam } from '../project-team/project-team';
 import { StagePanel } from '../stage-panel/stage-panel';
@@ -43,6 +44,7 @@ import { WORKFLOW, blockReason, furthestStep, stepsFor } from '../workflow';
     Icon,
     Stepper,
     AnalysisPanel,
+    StageReview,
     ProjectFiles,
     ProjectTeam,
     StagePanel,
@@ -90,8 +92,8 @@ export class ProjectWorkspacePage implements OnInit {
     this.reload();
   }
 
-  /** Gate 1 passed: reload so the stage, the stepper and the locked requirements follow. */
-  protected analysisApproved(): void {
+  /** A gate was passed: reload so the stage, the stepper and the locked requirements follow. */
+  protected gateApproved(): void {
     this.reload();
   }
 

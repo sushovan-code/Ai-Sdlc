@@ -1,0 +1,182 @@
+:host {
+  display: grid;
+  gap: 20px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sub,
+.note,
+.meta,
+.loading {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 24px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.empty p {
+  margin: 0;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+}
+
+.banner.ok {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.block {
+  display: grid;
+  gap: 8px;
+}
+
+.block h3,
+.block summary {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.block summary {
+  cursor: pointer;
+}
+
+.block p {
+  margin: 0;
+}
+
+ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.items li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.body {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.review textarea {
+  padding-block: 10px;
+  resize: vertical;
+}
+
+.id,
+.ref,
+.level {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.refs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.level {
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.plain li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.review {
+  display: grid;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.review label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.text {
+  white-space: pre-wrap;
+}
+
+.tag {
+  flex: none;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.items li.editing {
+  flex-wrap: wrap;
+}
+
+.fields {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fields label,
+.block label {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fields .input,
+.block textarea {
+  padding-block: 10px;
+}

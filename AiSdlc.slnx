@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AiSdlc.Api/AiSdlc.Api.csproj" />
+    <Project Path="src/AiSdlc.AppHost/AiSdlc.AppHost.csproj" />
+    <Project Path="src/AiSdlc.Application/AiSdlc.Application.csproj" />
+    <Project Path="src/AiSdlc.Domain/AiSdlc.Domain.csproj" />
+    <Project Path="src/AiSdlc.Infrastructure/AiSdlc.Infrastructure.csproj" />
+    <Project Path="src/AiSdlc.ServiceDefaults/AiSdlc.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AiSdlc.IntegrationTests/AiSdlc.IntegrationTests.csproj" />
+    <Project Path="tests/AiSdlc.UnitTests/AiSdlc.UnitTests.csproj" />
+  </Folder>
+</Solution>

@@ -42,7 +42,7 @@ public static class RequirementsChunker
         return chunks;
     }
 
-    private static IEnumerable<string> Paragraphs(string text) =>
+    private static string[] Paragraphs(string text) =>
         text.Replace("\r\n", "\n", StringComparison.Ordinal)
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 

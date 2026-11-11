@@ -11,4 +11,11 @@ public static class AuditActions
     public const string UserRoleChanged = "user.role-changed";
     public const string UserDeactivated = "user.deactivated";
     public const string UserActivated = "user.activated";
+    public const string ProjectCreated = "project.created";
+    public const string ProjectMemberAdded = "project.member-added";
+    public const string ProjectMemberRemoved = "project.member-removed";
+    public const string FileUploaded = "file.uploaded";
+    public const string FileRejected = "file.rejected";
+    public const string FileDownloaded = "file.downloaded";
+    public const string FileDeleted = "file.deleted";
 }

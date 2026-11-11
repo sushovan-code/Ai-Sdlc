@@ -14,6 +14,7 @@ internal sealed class IdentityUserAccounts(
 {
     private const string PasswordField = "password";
     private const string CurrentPasswordField = "currentPassword";
+    private const string LikeEscape = "\\";
 
     public async Task<Result<UserDto>> RegisterAsync(
         string email, string displayName, string password, string role, CancellationToken cancellationToken)
@@ -96,18 +97,41 @@ internal sealed class IdentityUserAccounts(
         return user is null ? null : await ToDtoAsync(user);
     }
 
+    public async Task<IReadOnlyList<UserDto>> FindManyAsync(
+        IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken)
+    {
+        if (userIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await UserRows().Where(r => userIds.Contains(r.User.Id)).Select(ToView).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<UserDto>> SearchActiveAsync(
+        string? query, int limit, CancellationToken cancellationToken)
+    {
+        var rows = UserRows().Where(r => r.User.IsActive);
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var pattern = $"%{EscapeLike(query)}%";
+            rows = rows.Where(r =>
+                EF.Functions.Like(r.User.DisplayName, pattern, LikeEscape)
+                || EF.Functions.Like(r.User.Email!, pattern, LikeEscape));
+        }
+
+        return await rows.OrderBy(r => r.User.DisplayName).Take(limit).Select(ToView).ToListAsync(cancellationToken);
+    }
+
     public async Task<PagedResult<UserDto>> ListAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
         var total = await db.Users.CountAsync(cancellationToken);
 
-        var items = await (
-                from user in db.Users.AsNoTracking()
-                join userRole in db.UserRoles on user.Id equals userRole.UserId
-                join role in db.Roles on userRole.RoleId equals role.Id
-                orderby user.Email
-                select new UserDto(user.Id, user.Email!, user.DisplayName, role.Name!, user.IsActive))
+        var items = await UserRows()
+            .OrderBy(r => r.User.Email)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
+            .Select(ToView)
             .ToListAsync(cancellationToken);
 
         return new PagedResult<UserDto>(items, page, pageSize, total);
@@ -145,6 +169,29 @@ internal sealed class IdentityUserAccounts(
         await users.UpdateSecurityStampAsync(user);
         return Result<UserDto>.Success(await ToDtoAsync(user));
     }
+
+    /// <summary>The DTO projection. Apply it last: filtering and ordering must happen on the entity columns, not on the DTO.</summary>
+    private static readonly System.Linq.Expressions.Expression<Func<UserRow, UserDto>> ToView =
+        row => new UserDto(row.User.Id, row.User.Email!, row.User.DisplayName, row.Role, row.User.IsActive);
+
+    /// <summary>Users joined to their single role. Filter and order on this, then project with <see cref="ToView"/>.</summary>
+    private IQueryable<UserRow> UserRows() =>
+        from user in db.Users.AsNoTracking()
+        join userRole in db.UserRoles on user.Id equals userRole.UserId
+        join role in db.Roles on userRole.RoleId equals role.Id
+        select new UserRow { User = user, Role = role.Name! };
+
+    private sealed class UserRow
+    {
+        public required ApplicationUser User { get; init; }
+
+        public required string Role { get; init; }
+    }
+
+    private static string EscapeLike(string text) =>
+        text.Replace(LikeEscape, LikeEscape + LikeEscape, StringComparison.Ordinal)
+            .Replace("%", LikeEscape + "%", StringComparison.Ordinal)
+            .Replace("_", LikeEscape + "_", StringComparison.Ordinal);
 
     private static UserDto ToDto(ApplicationUser user, string role) =>
         new(user.Id, user.Email!, user.DisplayName, role, user.IsActive);

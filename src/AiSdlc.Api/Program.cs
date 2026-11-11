@@ -1,8 +1,13 @@
+using System.Text.Json.Serialization;
 using AiSdlc.Api.Endpoints.Auth;
+using AiSdlc.Api.Endpoints.Directory;
+using AiSdlc.Api.Endpoints.Projects;
 using AiSdlc.Api.Endpoints.Users;
+using AiSdlc.Api.Http;
 using AiSdlc.Api.Security;
 using AiSdlc.Application;
 using AiSdlc.Infrastructure;
+using Microsoft.AspNetCore.Http.Features;
 
 const string ApiV1 = "/api/v1";
 
@@ -14,6 +19,15 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApiSecurity();
 builder.Services.AddApiRateLimiting(builder.Configuration);
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ClientErrorExceptionHandler>();
+
+// Enums travel as strings in every response and request (see docs/standards/naming-conventions.md).
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+// Multipart uploads are capped just above the largest allowed file; the handler enforces the exact limit.
+builder.Services.Configure<FormOptions>(options =>
+    options.MultipartBodyLengthLimit = ProjectFileEndpoints.UploadRequestLimitBytes);
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
@@ -42,6 +56,9 @@ if (app.Environment.IsDevelopment())
 var v1 = app.MapGroup(ApiV1);
 v1.MapAuthEndpoints();
 v1.MapUserEndpoints();
+v1.MapProjectEndpoints();
+v1.MapProjectFileEndpoints();
+v1.MapDirectoryEndpoints();
 
 app.Run();
 

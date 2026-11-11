@@ -1,4 +1,5 @@
 using AiSdlc.Domain.Auditing;
+using AiSdlc.Domain.Projects;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,8 @@ public sealed class AiSdlcDbContext(DbContextOptions<AiSdlcDbContext> options)
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
 {
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+
+    public DbSet<Project> Projects => Set<Project>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

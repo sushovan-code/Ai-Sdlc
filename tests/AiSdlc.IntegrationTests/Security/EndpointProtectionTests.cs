@@ -19,7 +19,32 @@ public sealed class EndpointProtectionTests(ApiFactory factory)
         [HttpMethod.Put.Method, $"/api/v1/users/{AnyUserId}/role"],
         [HttpMethod.Post.Method, $"/api/v1/users/{AnyUserId}/deactivate"],
         [HttpMethod.Post.Method, $"/api/v1/users/{AnyUserId}/activate"],
+        [HttpMethod.Get.Method, "/api/v1/projects"],
+        [HttpMethod.Post.Method, "/api/v1/projects"],
+        [HttpMethod.Get.Method, $"/api/v1/projects/{AnyUserId}"],
+        [HttpMethod.Post.Method, $"/api/v1/projects/{AnyUserId}/members"],
+        [HttpMethod.Delete.Method, $"/api/v1/projects/{AnyUserId}/members/{AnyUserId}"],
+        [HttpMethod.Post.Method, $"/api/v1/projects/{AnyUserId}/files/requirements"],
+        [HttpMethod.Get.Method, $"/api/v1/projects/{AnyUserId}/files/{AnyUserId}/download"],
+        [HttpMethod.Delete.Method, $"/api/v1/projects/{AnyUserId}/files/{AnyUserId}"],
+        [HttpMethod.Get.Method, "/api/v1/directory/users"],
     ];
+
+    /// <summary>Endpoints only a Project Manager may call, whatever the project.</summary>
+    public static IEnumerable<object[]> ManagerOnlyEndpoints() =>
+    [
+        [HttpMethod.Post.Method, "/api/v1/projects"],
+        [HttpMethod.Post.Method, $"/api/v1/projects/{AnyUserId}/members"],
+        [HttpMethod.Delete.Method, $"/api/v1/projects/{AnyUserId}/members/{AnyUserId}"],
+        [HttpMethod.Post.Method, $"/api/v1/projects/{AnyUserId}/files/requirements"],
+        [HttpMethod.Delete.Method, $"/api/v1/projects/{AnyUserId}/files/{AnyUserId}"],
+        [HttpMethod.Get.Method, "/api/v1/directory/users"],
+    ];
+
+    public static IEnumerable<object[]> EveryOtherRoleAgainstEveryManagerEndpoint() =>
+        from role in new[] { TestUsers.Architect, TestUsers.Developer, TestUsers.QA, TestUsers.Admin }
+        from endpoint in ManagerOnlyEndpoints()
+        select new[] { role, endpoint[0], endpoint[1] };
 
     public static IEnumerable<object[]> AdminOnlyEndpoints() =>
         ProtectedEndpoints().Where(e => ((string)e[1]).StartsWith("/api/v1/users", StringComparison.Ordinal));
@@ -38,6 +63,17 @@ public sealed class EndpointProtectionTests(ApiFactory factory)
         var response = await client.SendAsync(Request(method, url));
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Theory]
+    [MemberData(nameof(EveryOtherRoleAgainstEveryManagerEndpoint))]
+    public async Task NonManager_CallingManagerEndpoint_Returns403(string email, string method, string url)
+    {
+        using var client = await factory.SignedInAsClientAsync(email);
+
+        var response = await client.SendAsync(Request(method, url));
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
     }
 
     [Theory]
@@ -75,11 +111,15 @@ public sealed class EndpointProtectionTests(ApiFactory factory)
     private static HttpRequestMessage Request(string method, string url)
     {
         var request = new HttpRequestMessage(new HttpMethod(method), url);
-        if (method is "POST" or "PUT")
+        if (method is not ("POST" or "PUT"))
         {
-            request.Content = JsonContent.Create(new { role = "QA" });
+            return request;
         }
 
+        // The upload route only accepts multipart bodies; every other write takes JSON.
+        request.Content = url.Contains("/files/", StringComparison.Ordinal)
+            ? new MultipartFormDataContent { { new ByteArrayContent([1]), "file", "a.txt" } }
+            : JsonContent.Create(new { role = "QA", name = "A project", userId = AnyUserId });
         return request;
     }
 }

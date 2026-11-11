@@ -19,7 +19,8 @@ public static class AuthenticationExtensions
 
         services.AddAuthorizationBuilder()
             .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())
-            .AddPolicy(AuthorizationPolicies.UserAdministration, policy => policy.RequireRole(AppRoles.Admin));
+            .AddPolicy(AuthorizationPolicies.UserAdministration, policy => policy.RequireRole(AppRoles.Admin))
+            .AddPolicy(AuthorizationPolicies.ProjectManagement, policy => policy.RequireRole(AppRoles.ProjectManager));
 
         return services;
     }

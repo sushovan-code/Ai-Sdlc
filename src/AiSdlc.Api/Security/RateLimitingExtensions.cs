@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using AiSdlc.Infrastructure.Security;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 
@@ -25,6 +26,17 @@ public static class RateLimitingExtensions
                         {
                             PermitLimit = settings.Value.AuthPermitLimit,
                             Window = TimeSpan.FromSeconds(settings.Value.AuthWindowSeconds),
+                            QueueLimit = 0,
+                        }));
+                limiter.AddPolicy(RateLimitPolicies.Writes, httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        httpContext.User.FindFirst(JwtClaims.Subject)?.Value
+                            ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                            ?? UnknownClient,
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = settings.Value.WritesPermitLimit,
+                            Window = TimeSpan.FromSeconds(settings.Value.WritesWindowSeconds),
                             QueueLimit = 0,
                         }));
             });

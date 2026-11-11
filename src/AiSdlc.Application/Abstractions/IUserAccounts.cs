@@ -16,6 +16,11 @@ public interface IUserAccounts
 
     Task<UserDto?> FindAsync(Guid userId, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<UserDto>> FindManyAsync(IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken);
+
+    /// <summary>Active users whose name or email contains <paramref name="query"/>, best for pickers. Capped by <paramref name="limit"/>.</summary>
+    Task<IReadOnlyList<UserDto>> SearchActiveAsync(string? query, int limit, CancellationToken cancellationToken);
+
     Task<PagedResult<UserDto>> ListAsync(int page, int pageSize, CancellationToken cancellationToken);
 
     Task<Result<UserDto>> SetRoleAsync(Guid userId, string role, CancellationToken cancellationToken);

@@ -2,6 +2,15 @@ using AiSdlc.Application.Auth.ChangePassword;
 using AiSdlc.Application.Auth.GetCurrentUser;
 using AiSdlc.Application.Auth.Login;
 using AiSdlc.Application.Auth.Register;
+using AiSdlc.Application.Files.DeleteProjectFile;
+using AiSdlc.Application.Files.DownloadProjectFile;
+using AiSdlc.Application.Files.UploadProjectFile;
+using AiSdlc.Application.Projects.AddProjectMember;
+using AiSdlc.Application.Projects.CreateProject;
+using AiSdlc.Application.Projects.GetProject;
+using AiSdlc.Application.Projects.ListProjects;
+using AiSdlc.Application.Projects.RemoveProjectMember;
+using AiSdlc.Application.UserDirectory.SearchUsers;
 using AiSdlc.Application.Users.ListUsers;
 using AiSdlc.Application.Users.SetUserActive;
 using AiSdlc.Application.Users.SetUserRole;
@@ -24,6 +33,16 @@ public static class DependencyInjection
         services.AddScoped<ListUsersHandler>();
         services.AddScoped<SetUserRoleHandler>();
         services.AddScoped<SetUserActiveHandler>();
+
+        services.AddScoped<CreateProjectHandler>();
+        services.AddScoped<ListProjectsHandler>();
+        services.AddScoped<GetProjectHandler>();
+        services.AddScoped<AddProjectMemberHandler>();
+        services.AddScoped<RemoveProjectMemberHandler>();
+        services.AddScoped<UploadProjectFileHandler>();
+        services.AddScoped<DownloadProjectFileHandler>();
+        services.AddScoped<DeleteProjectFileHandler>();
+        services.AddScoped<SearchUsersHandler>();
 
         return services;
     }
